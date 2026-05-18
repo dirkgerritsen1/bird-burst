@@ -1,0 +1,737 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Dirk Gerritsen — Associate Professor of Finance, Utrecht University</title>
+  <meta name="description" content="Dirk Gerritsen is Associate Professor of Finance at Utrecht University. He studies behavioral finance, sustainable investing, security analysts, and the financial decisions of retail investors." />
+  <meta name="author" content="Dirk Gerritsen" />
+
+  <meta property="og:title" content="Dirk Gerritsen — Associate Professor of Finance, Utrecht University" />
+  <meta property="og:description" content="Behavioral finance, sustainable investing, and the economics of financial advice." />
+  <meta property="og:type" content="website" />
+
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23FFCD00'/%3E%3Ctext x='32' y='44' font-family='Georgia,serif' font-size='40' font-weight='700' text-anchor='middle' fill='%23000'%3EG%3C/text%3E%3C/svg%3E" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <!-- ===== NAV ===== -->
+  <header class="nav" role="banner">
+    <div class="nav__inner">
+      <a class="nav__brand" href="#top" aria-label="Dirk Gerritsen — home">
+        <span class="nav__mark" aria-hidden="true">
+          <svg viewBox="0 0 40 40" width="28" height="28">
+            <g class="sunburst-mini">
+              <circle cx="20" cy="20" r="19" fill="#0C0C0C"/>
+              <g fill="#FFCD00">
+                <!-- 16 rays -->
+                <rect x="19" y="3" width="2" height="14"/>
+                <rect x="19" y="23" width="2" height="14"/>
+                <rect x="3" y="19" width="14" height="2"/>
+                <rect x="23" y="19" width="14" height="2"/>
+                <rect x="19" y="3" width="2" height="14" transform="rotate(45 20 20)"/>
+                <rect x="19" y="23" width="2" height="14" transform="rotate(45 20 20)"/>
+                <rect x="3" y="19" width="14" height="2" transform="rotate(45 20 20)"/>
+                <rect x="23" y="19" width="14" height="2" transform="rotate(45 20 20)"/>
+                <rect x="19" y="3" width="2" height="14" transform="rotate(22.5 20 20)"/>
+                <rect x="19" y="23" width="2" height="14" transform="rotate(22.5 20 20)"/>
+                <rect x="3" y="19" width="14" height="2" transform="rotate(22.5 20 20)"/>
+                <rect x="23" y="19" width="14" height="2" transform="rotate(22.5 20 20)"/>
+                <rect x="19" y="3" width="2" height="14" transform="rotate(67.5 20 20)"/>
+                <rect x="19" y="23" width="2" height="14" transform="rotate(67.5 20 20)"/>
+                <rect x="3" y="19" width="14" height="2" transform="rotate(67.5 20 20)"/>
+                <rect x="23" y="19" width="14" height="2" transform="rotate(67.5 20 20)"/>
+              </g>
+              <rect x="16" y="14" width="8" height="11" rx="1" fill="#FAF8F2"/>
+              <path d="M16 14 L20 14 L20 19 Z" fill="#C00A35"/>
+            </g>
+          </svg>
+        </span>
+        <span class="nav__brand-text"><b>D.</b> Gerritsen</span>
+      </a>
+
+      <nav class="nav__links" aria-label="Primary">
+        <a href="#research">Research</a>
+        <a href="#publications">Publications</a>
+        <a href="#teaching">Teaching</a>
+        <a href="#press">Press</a>
+        <a href="#speaking">Speaking</a>
+        <a href="#contact" class="nav__cta">Contact</a>
+      </nav>
+
+      <button class="nav__menu" aria-label="Menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ===== HERO ===== -->
+  <section id="top" class="hero">
+    <!-- Sunburst background -->
+    <div class="hero__sun" aria-hidden="true">
+      <svg viewBox="0 0 800 800" width="100%" height="100%">
+        <defs>
+          <radialGradient id="sunfade" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#FFCD00" stop-opacity="0.35"/>
+            <stop offset="60%" stop-color="#FFCD00" stop-opacity="0.08"/>
+            <stop offset="100%" stop-color="#FFCD00" stop-opacity="0"/>
+          </radialGradient>
+        </defs>
+        <circle cx="400" cy="400" r="380" fill="url(#sunfade)"/>
+        <g class="hero__sun-rays" stroke="#FFCD00" stroke-width="2" stroke-linecap="round">
+          <!-- 36 rays -->
+        </g>
+      </svg>
+    </div>
+
+    <div class="hero__grain" aria-hidden="true"></div>
+
+    <div class="hero__inner">
+      <div class="hero__eyebrow reveal">
+        <span class="dot"></span>
+        Utrecht University — School of Economics
+      </div>
+
+      <h1 class="hero__title reveal">
+        <span class="hero__first">Dirk</span>
+        <span class="hero__last">Gerritsen<em class="hero__period">.</em></span>
+      </h1>
+
+      <p class="hero__role reveal">
+        Associate Professor of <em>Finance</em>
+      </p>
+
+      <p class="hero__lede reveal">
+        I study how investors form beliefs — the analysts they listen to,
+        the influencers they follow, the ESG signals they price, and the
+        biases that quietly bend their portfolios. My work sits where
+        <span class="hl">behavioral finance</span>,
+        <span class="hl">sustainable investing</span>, and
+        <span class="hl">retail decision-making</span> meet the data.
+      </p>
+
+      <div class="hero__meta reveal">
+        <div class="hero__meta-item">
+          <span class="hero__meta-k">Based in</span>
+          <span class="hero__meta-v">Utrecht, NL</span>
+        </div>
+        <div class="hero__meta-item">
+          <span class="hero__meta-k">PhD</span>
+          <span class="hero__meta-v">Economics, 2014</span>
+        </div>
+        <div class="hero__meta-item">
+          <span class="hero__meta-k">Group</span>
+          <span class="hero__meta-v"><a href="https://www.linkedin.com/company/finance-utrecht" target="_blank" rel="noopener">Finance @ U.U.</a></span>
+        </div>
+        <div class="hero__meta-item">
+          <span class="hero__meta-k">Status</span>
+          <span class="hero__meta-v">Open to collaboration</span>
+        </div>
+      </div>
+
+      <div class="hero__cta reveal">
+        <a href="#research" class="btn btn--primary">
+          <span>See the research</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </a>
+        <a href="mailto:d.f.gerritsen@uu.nl" class="btn btn--ghost">
+          d.f.gerritsen@uu.nl
+        </a>
+      </div>
+    </div>
+
+    <!-- Portrait -->
+    <figure class="hero__portrait reveal">
+      <div class="hero__portrait-frame">
+        <img src="img/speaking-2.jpg" alt="Dirk Gerritsen presenting research at the Research in Behavioral Finance Conference" loading="eager" />
+        <div class="hero__portrait-tag">
+          <span>Research in Behavioral Finance Conference</span>
+        </div>
+      </div>
+    </figure>
+
+    <!-- Scroll cue -->
+    <div class="hero__scroll" aria-hidden="true">
+      <span>scroll</span>
+      <span class="hero__scroll-line"></span>
+    </div>
+  </section>
+
+  <!-- ===== MARQUEE: where the work appears ===== -->
+  <section class="marquee" aria-label="Selected journals">
+    <div class="marquee__track">
+      <ul class="marquee__list">
+        <li>Journal of Finance</li><li>•</li>
+        <li>Journal of International Money and Finance</li><li>•</li>
+        <li>Finance Research Letters</li><li>•</li>
+        <li>Journal of Public Policy &amp; Marketing</li><li>•</li>
+        <li>Journal of Financial Services Research</li><li>•</li>
+        <li>International Review of Finance</li><li>•</li>
+        <li>Journal of Behavioral and Experimental Finance</li><li>•</li>
+        <li>International Review of Financial Analysis</li><li>•</li>
+        <li>Marketing Letters</li><li>•</li>
+        <li>Annals of Tourism Research</li><li>•</li>
+      </ul>
+      <ul class="marquee__list" aria-hidden="true">
+        <li>Journal of Finance</li><li>•</li>
+        <li>Journal of International Money and Finance</li><li>•</li>
+        <li>Finance Research Letters</li><li>•</li>
+        <li>Journal of Public Policy &amp; Marketing</li><li>•</li>
+        <li>Journal of Financial Services Research</li><li>•</li>
+        <li>International Review of Finance</li><li>•</li>
+        <li>Journal of Behavioral and Experimental Finance</li><li>•</li>
+        <li>International Review of Financial Analysis</li><li>•</li>
+        <li>Marketing Letters</li><li>•</li>
+        <li>Annals of Tourism Research</li><li>•</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ===== ABOUT ===== -->
+  <section id="about" class="about">
+    <div class="about__inner">
+      <div class="section-head reveal">
+        <span class="section-head__no">01</span>
+        <span class="section-head__title">About</span>
+      </div>
+
+      <div class="about__grid">
+        <div class="about__copy reveal">
+          <p class="about__lede">
+            I am an Associate Professor at <strong>Utrecht University School of
+            Economics</strong>, where I have taught and researched for two
+            decades — first as a lecturer, then assistant professor, and
+            since 2025 in my current role.
+          </p>
+          <p>
+            My research asks a single, stubborn question: <em>what really moves
+            investors?</em> The textbook answer — rational expectations, perfect
+            information — collides with the world I actually study: analysts
+            whose forecasts anchor on round numbers, retail traders who copy
+            financial influencers, fund managers who quietly rename their
+            products to ride the ESG wave, and tourists who lose a few percent
+            of their holiday budget to dynamic currency conversion screens at
+            airport ATMs.
+          </p>
+          <p>
+            That mix of finance, psychology, and field data has taken me from
+            Stellenbosch to Shanghai. It has also produced work that
+            occasionally crosses over: into the pages of <em>Het Financieele
+            Dagblad</em>, onto Dutch radio, and into the courtrooms of policy
+            debate around consumer financial protection.
+          </p>
+          <p>
+            I teach in the <strong>MSc Banking &amp; Finance</strong> — which I
+            directed from 2019 to 2025 — and I was U.S.E. Teacher of the Year
+            in 2020. I currently co-supervise one PhD student.
+          </p>
+        </div>
+
+        <aside class="about__side reveal">
+          <div class="stat">
+            <span class="stat__no">20+</span>
+            <span class="stat__label">Peer-reviewed papers</span>
+          </div>
+          <div class="stat">
+            <span class="stat__no">11</span>
+            <span class="stat__label">Visiting positions on four continents</span>
+          </div>
+          <div class="stat">
+            <span class="stat__no">5</span>
+            <span class="stat__label">Awards including <em>Best Paper</em> &amp; <em>Teacher of the Year</em></span>
+          </div>
+          <div class="stat">
+            <span class="stat__no">2014</span>
+            <span class="stat__label">PhD, Tjalling C. Koopmans Institute</span>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== RESEARCH THEMES ===== -->
+  <section id="research" class="research">
+    <div class="research__inner">
+      <div class="section-head reveal">
+        <span class="section-head__no">02</span>
+        <span class="section-head__title">Research</span>
+      </div>
+
+      <h2 class="research__h reveal">
+        Four threads that <em>keep coming back</em>.
+      </h2>
+
+      <ol class="themes">
+        <li class="theme reveal">
+          <span class="theme__no">I</span>
+          <div class="theme__body">
+            <h3 class="theme__title">Sustainable Finance &amp; ESG</h3>
+            <p>
+              Do ESG ratings move stock prices? Do fund managers <em>truly</em>
+              change strategy when they rename a fund &ldquo;sustainable&rdquo;
+              — or just the label on the door? My recent work tackles greenwashing,
+              climate-risk pricing, and the dominant role of the environmental
+              pillar.
+            </p>
+            <ul class="theme__papers">
+              <li>
+                <span class="paper-year">2026</span>
+                Environmental ratings and stock returns
+                <span class="paper-venue">Finance Research Letters</span>
+              </li>
+              <li>
+                <span class="paper-year">2025</span>
+                Renaming with purpose <span class="badge">Best Paper</span>
+                <span class="paper-venue">J. of Int'l Money &amp; Finance</span>
+              </li>
+              <li>
+                <span class="paper-year">2025</span>
+                ESG rating changes and stock returns
+                <span class="paper-venue">J. of Int'l Money &amp; Finance</span>
+              </li>
+            </ul>
+          </div>
+        </li>
+
+        <li class="theme reveal">
+          <span class="theme__no">II</span>
+          <div class="theme__body">
+            <h3 class="theme__title">Analysts, Forecasts &amp; Reference Points</h3>
+            <p>
+              My PhD asked whether security analysts' opinions actually matter
+              — and the answer, it turns out, is more nuanced than either the
+              efficient-markets crowd or the analyst-bashers would have you
+              believe. Target prices act as reference points; recommendations
+              move some markets more than others; and chartists, surprisingly,
+              sometimes <em>are</em> artists.
+            </p>
+            <ul class="theme__papers">
+              <li>
+                <span class="paper-year">2017</span>
+                Target prices as reference point and takeover completion
+                <span class="paper-venue">J. of Behavioral &amp; Exp. Finance</span>
+              </li>
+              <li>
+                <span class="paper-year">2016</span>
+                Are chartists artists?
+                <span class="paper-venue">Int'l Review of Financial Analysis</span>
+              </li>
+              <li>
+                <span class="paper-year">2014</span>
+                The relevance of security analyst opinions
+                <span class="paper-venue">PhD thesis · Koopmans Institute</span>
+              </li>
+            </ul>
+          </div>
+        </li>
+
+        <li class="theme reveal">
+          <span class="theme__no">III</span>
+          <div class="theme__body">
+            <h3 class="theme__title">Retail Investors &amp; Financial Decision-Making</h3>
+            <p>
+              Where finance meets consumer behavior. I have studied dynamic
+              currency conversion at foreign ATMs (a quiet tax on the less
+              financially literate), the rise of finfluencers and whether
+              following their advice costs you returns, bank switching
+              behavior, and the savings-rate puzzle.
+            </p>
+            <ul class="theme__papers">
+              <li>
+                <span class="paper-year">2025</span>
+                Influencers and consumer financial decision-making
+                <span class="paper-venue">Int'l J. of Consumer Studies</span>
+              </li>
+              <li>
+                <span class="paper-year">2023</span>
+                Dynamic currency conversion harms the less financially literate
+                <span class="paper-venue">J. of Public Policy &amp; Marketing</span>
+              </li>
+              <li>
+                <span class="paper-year">2020</span>
+                Bank switching and interest rates
+                <span class="paper-venue">J. of Financial Services Research</span>
+              </li>
+            </ul>
+          </div>
+        </li>
+
+        <li class="theme reveal">
+          <span class="theme__no">IV</span>
+          <div class="theme__body">
+            <h3 class="theme__title">Crypto, Disclosure &amp; Market Microstructure</h3>
+            <p>
+              Newer markets, older biases. I have asked whether Bitcoin
+              "experts" can be trusted, whether technical trading rules
+              actually profit in crypto markets, and what happens when
+              confidential short positions are accidentally disclosed to the
+              public.
+            </p>
+            <ul class="theme__papers">
+              <li>
+                <span class="paper-year">2024</span>
+                Non-standard errors
+                <span class="paper-venue">Journal of Finance</span>
+              </li>
+              <li>
+                <span class="paper-year">2022</span>
+                Can Bitcoin investors profit from crypto experts?
+                <span class="paper-venue">Finance Research Letters</span>
+              </li>
+              <li>
+                <span class="paper-year">2019</span>
+                Accidental disclosure of confidential short positions
+                <span class="paper-venue">Finance Research Letters</span>
+              </li>
+            </ul>
+          </div>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- ===== FEATURED PUBLICATIONS ===== -->
+  <section id="publications" class="pubs">
+    <div class="pubs__inner">
+      <div class="section-head reveal">
+        <span class="section-head__no">03</span>
+        <span class="section-head__title">Selected Publications</span>
+      </div>
+
+      <h2 class="pubs__h reveal">
+        Recent &amp; <em>most cited</em>.
+      </h2>
+
+      <article class="pub pub--featured reveal">
+        <div class="pub__year">2024</div>
+        <div class="pub__body">
+          <div class="pub__authors">Menkveld, A.J., Dreber, A., Holzmeister, F., et al. <strong>(incl. Gerritsen, D.F.)</strong></div>
+          <h3 class="pub__title">Non-standard errors</h3>
+          <div class="pub__venue"><em>Journal of Finance</em> · 79(3), 2339–2390</div>
+          <p class="pub__note">
+            A landmark crowd-sourced replication study: 164 research teams
+            independently analyze the same six hypotheses on identical data,
+            quantifying how much variation in published findings is driven
+            not by the data but by the choices researchers make along the way.
+          </p>
+        </div>
+      </article>
+
+      <div class="pubs__grid">
+        <article class="pub reveal">
+          <div class="pub__year">2025</div>
+          <div class="pub__body">
+            <div class="pub__authors">Gibbon, K., Derwall, J., <strong>Gerritsen, D.F.</strong>, Koedijk, K.</div>
+            <h3 class="pub__title">Renaming with purpose: Investor response and fund manager behavior after ESG renaming</h3>
+            <div class="pub__venue"><em>J. of International Money and Finance</em> · 152, 103263</div>
+            <div class="pub__tag"><span class="badge badge--gold">Best Paper Award · GRASFI 2024</span></div>
+          </div>
+        </article>
+
+        <article class="pub reveal">
+          <div class="pub__year">2026</div>
+          <div class="pub__body">
+            <div class="pub__authors">Galema, R.J., <strong>Gerritsen, D.F.</strong></div>
+            <h3 class="pub__title">Environmental ratings and stock returns: The dominant role of climate change</h3>
+            <div class="pub__venue"><em>Finance Research Letters</em> · 89, 108238</div>
+          </div>
+        </article>
+
+        <article class="pub reveal">
+          <div class="pub__year">2025</div>
+          <div class="pub__body">
+            <div class="pub__authors">Galema, R.J., <strong>Gerritsen, D.F.</strong></div>
+            <h3 class="pub__title">ESG rating changes and stock returns</h3>
+            <div class="pub__venue"><em>J. of International Money and Finance</em> · forthcoming</div>
+          </div>
+        </article>
+
+        <article class="pub reveal">
+          <div class="pub__year">2025</div>
+          <div class="pub__body">
+            <div class="pub__authors"><strong>Gerritsen, D.F.</strong>, de Regt, A.</div>
+            <h3 class="pub__title">Influencers and consumer financial decision-making</h3>
+            <div class="pub__venue"><em>Int'l Journal of Consumer Studies</em> · forthcoming</div>
+          </div>
+        </article>
+
+        <article class="pub reveal">
+          <div class="pub__year">2023</div>
+          <div class="pub__body">
+            <div class="pub__authors"><strong>Gerritsen, D.F.</strong>, Lancee, B.S., Rigtering, J.P.C.</div>
+            <h3 class="pub__title">Dynamic currency conversion payment options specifically harm less financially literate customers</h3>
+            <div class="pub__venue"><em>J. of Public Policy &amp; Marketing</em> · 42(3), 203–222</div>
+          </div>
+        </article>
+
+        <article class="pub reveal">
+          <div class="pub__year">2022</div>
+          <div class="pub__body">
+            <div class="pub__authors"><strong>Gerritsen, D.F.</strong>, Lugtigheid, R.A.C., Walther, T.</div>
+            <h3 class="pub__title">Can Bitcoin investors profit from predictions by crypto experts?</h3>
+            <div class="pub__venue"><em>Finance Research Letters</em> · 46(A), 102266</div>
+          </div>
+        </article>
+
+        <article class="pub reveal">
+          <div class="pub__year">2020</div>
+          <div class="pub__body">
+            <div class="pub__authors"><strong>Gerritsen, D.F.</strong>, Bouri, E., Ramezanifar, E., Roubaud, D.</div>
+            <h3 class="pub__title">The profitability of technical trading rules in the Bitcoin market</h3>
+            <div class="pub__venue"><em>Finance Research Letters</em> · 34, 101263</div>
+          </div>
+        </article>
+
+        <article class="pub reveal">
+          <div class="pub__year">2020</div>
+          <div class="pub__body">
+            <div class="pub__authors"><strong>Gerritsen, D.F.</strong>, Bikker, J.A.</div>
+            <h3 class="pub__title">Bank switching and interest rates: Examining annual transfers between savings accounts</h3>
+            <div class="pub__venue"><em>J. of Financial Services Research</em> · 57, 29–49</div>
+          </div>
+        </article>
+
+        <article class="pub reveal">
+          <div class="pub__year">2017</div>
+          <div class="pub__body">
+            <div class="pub__authors"><strong>Gerritsen, D.F.</strong>, Weitzel, U.</div>
+            <h3 class="pub__title">Security analyst target prices as reference point and takeover completion</h3>
+            <div class="pub__venue"><em>J. of Behavioral and Experimental Finance</em> · 15, 1–14</div>
+          </div>
+        </article>
+      </div>
+
+      <p class="pubs__more reveal">
+        Full publication list — including books, professional publications,
+        and Dutch-language work — at
+        <a href="http://www.dirkgerritsen.nl" target="_blank" rel="noopener">dirkgerritsen.nl</a>.
+      </p>
+    </div>
+  </section>
+
+  <!-- ===== TEACHING ===== -->
+  <section id="teaching" class="teaching">
+    <div class="teaching__inner">
+      <div class="section-head reveal section-head--light">
+        <span class="section-head__no">04</span>
+        <span class="section-head__title">Teaching &amp; Impact</span>
+      </div>
+
+      <div class="teaching__grid">
+        <div class="teaching__copy reveal">
+          <h2 class="teaching__h">
+            Twenty years in front of <em>Utrecht's</em> finance students.
+          </h2>
+          <p>
+            I joined Utrecht University in 2005 as a lecturer and have taught
+            here ever since — through three career stages and one PhD. From
+            2019 through 2025 I served as <strong>Program Director of the MSc
+            in Banking &amp; Finance</strong>; in 2022 I earned the Senior
+            Teaching Qualification (SKOw). I co-supervise PhD students and
+            review for ten+ journals.
+          </p>
+          <p>
+            I have lectured in seven countries as a visiting scholar —
+            Stellenbosch, Fudan, Nyenrode, Victoria, Anton de Kom, Erasmus,
+            and others — and bring back to Utrecht a comparative view of
+            what financial education needs to look like in 2026.
+          </p>
+        </div>
+
+        <ul class="awards reveal">
+          <li>
+            <span class="award__year">2024</span>
+            <div>
+              <span class="award__title">Best Paper Award</span>
+              <span class="award__detail">GRASFI conf., <em>Renaming with purpose</em></span>
+            </div>
+          </li>
+          <li>
+            <span class="award__year">2020</span>
+            <div>
+              <span class="award__title">Teacher of the Year</span>
+              <span class="award__detail">U.S.E. · nominated UU-wide</span>
+            </div>
+          </li>
+          <li>
+            <span class="award__year">2019</span>
+            <div>
+              <span class="award__title">SURF Award (runner-up)</span>
+              <span class="award__detail">Education innovation · Python in MSc.</span>
+            </div>
+          </li>
+          <li>
+            <span class="award__year">2018</span>
+            <div>
+              <span class="award__title">Outstanding Reviewer Award</span>
+              <span class="award__detail">Finance Research Letters</span>
+            </div>
+          </li>
+          <li>
+            <span class="award__year">2014</span>
+            <div>
+              <span class="award__title">Research Talent Prize</span>
+              <span class="award__detail">U.S.E. · PhD work</span>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== PRESS ===== -->
+  <section id="press" class="press">
+    <div class="press__inner">
+      <div class="section-head reveal">
+        <span class="section-head__no">05</span>
+        <span class="section-head__title">In the Press</span>
+      </div>
+
+      <h2 class="press__h reveal">
+        Research that <em>travels</em>.
+      </h2>
+      <p class="press__lede reveal">
+        My work on financial influencers, ATM conversion fees, short selling,
+        and analyst advice has been picked up by Dutch and international
+        media — from <em>Het Financieele Dagblad</em> to <em>Bloomberg</em>.
+      </p>
+
+      <div class="press__grid">
+        <article class="press__card reveal">
+          <span class="press__topic">Finfluencers</span>
+          <ul>
+            <li>RTL Nieuws <small>(TV)</small></li>
+            <li>Radio 1</li>
+            <li>Het Financieele Dagblad</li>
+          </ul>
+        </article>
+        <article class="press__card reveal">
+          <span class="press__topic">ATM &amp; conversions</span>
+          <ul>
+            <li>BNN Vara Kassa <small>(TV)</small></li>
+            <li>De Telegraaf</li>
+            <li>de Volkskrant</li>
+          </ul>
+        </article>
+        <article class="press__card reveal">
+          <span class="press__topic">Short selling</span>
+          <ul>
+            <li>BNR Nieuwsradio</li>
+            <li>Les Echos</li>
+            <li>Bloomberg</li>
+          </ul>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== SPEAKING ===== -->
+  <section id="speaking" class="speaking">
+    <div class="speaking__inner">
+      <div class="section-head reveal section-head--light">
+        <span class="section-head__no">06</span>
+        <span class="section-head__title">Speaking</span>
+      </div>
+
+      <h2 class="speaking__h reveal">
+        Recent talks &amp; <em>invited research</em>.
+      </h2>
+
+      <div class="speaking__grid">
+        <ul class="talks reveal">
+          <li><span class="talks__year">2026</span><span>ASR · Invited research talk</span></li>
+          <li><span class="talks__year">2024</span><span>Dutch Sustainable Finance Workshop, Amsterdam</span></li>
+          <li><span class="talks__year">2023</span><span>ARCS Conference, Washington DC</span></li>
+          <li><span class="talks__year">2022</span><span>ACES, Utrecht</span></li>
+          <li><span class="talks__year">2022</span><span>GRASFI Conference, Zurich</span></li>
+          <li><span class="talks__year">2022</span><span>Research in Behavioral Finance Conf., Amsterdam</span></li>
+          <li><span class="talks__year">2022</span><span>Environmental Finance for the Common Good, London</span></li>
+          <li><span class="talks__year">2019</span><span>VEB General Meeting · "Beleggen met experts"</span></li>
+        </ul>
+
+        <figure class="speaking__photo reveal">
+          <img src="img/speaking-3.jpg" alt="Dirk Gerritsen at the Research in Behavioral Finance Conference" />
+          <figcaption>RBFC, Amsterdam · 2022</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== CONTACT ===== -->
+  <section id="contact" class="contact">
+    <div class="contact__inner">
+      <div class="section-head reveal section-head--light">
+        <span class="section-head__no">07</span>
+        <span class="section-head__title">Contact</span>
+      </div>
+
+      <h2 class="contact__h reveal">
+        Get in <em>touch</em>.
+      </h2>
+
+      <div class="contact__grid">
+        <div class="contact__copy reveal">
+          <p>
+            For research collaboration, PhD enquiries, media requests, or to
+            invite me to speak — the fastest route is email. I read everything,
+            even if my reply latency varies with the academic calendar.
+          </p>
+        </div>
+
+        <div class="contact__channels reveal">
+          <a class="channel" href="mailto:d.f.gerritsen@uu.nl">
+            <span class="channel__label">Email</span>
+            <span class="channel__value">d.f.gerritsen@uu.nl</span>
+          </a>
+          <a class="channel" href="tel:+31638224127">
+            <span class="channel__label">Phone</span>
+            <span class="channel__value">+31 6 3822 4127</span>
+          </a>
+          <a class="channel" href="http://www.dirkgerritsen.nl" target="_blank" rel="noopener">
+            <span class="channel__label">Personal site</span>
+            <span class="channel__value">dirkgerritsen.nl</span>
+          </a>
+          <a class="channel" href="https://linkedin.com/in/dirkgerritsen/" target="_blank" rel="noopener">
+            <span class="channel__label">LinkedIn</span>
+            <span class="channel__value">in/dirkgerritsen</span>
+          </a>
+          <a class="channel" href="https://www.linkedin.com/company/finance-utrecht" target="_blank" rel="noopener">
+            <span class="channel__label">Finance @ U.U.</span>
+            <span class="channel__value">company/finance-utrecht</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="foot">
+    <div class="foot__inner">
+      <div class="foot__brand">
+        <img src="img/finance-logo.png" alt="Finance @ Utrecht University" />
+      </div>
+      <div class="foot__meta">
+        <p>Affiliated with <strong>Finance @ Utrecht University</strong>.</p>
+        <p class="foot__small">
+          © <span id="year"></span> Dirk Gerritsen.
+          Page set in Fraunces &amp; Inter.
+        </p>
+      </div>
+      <div class="foot__top">
+        <a href="#top" aria-label="Back to top">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+          back to top
+        </a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/script.js"></script>
+</body>
+</html>
