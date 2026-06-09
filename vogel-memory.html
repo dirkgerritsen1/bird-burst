@@ -1,0 +1,1304 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Vogel Memory</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#0288d1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Vogel Memory">
+  <!-- Icons (maak aan: icons/icon-192.png en icons/icon-512.png) -->
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <style>
+    /* ── reset ──────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      width: 100%; height: 100%;
+      overflow: hidden;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(150deg, #fffde7 0%, #fff9c4 50%, #fff176 100%);
+      padding-top:    env(safe-area-inset-top);
+      padding-bottom: env(safe-area-inset-bottom);
+      padding-left:   env(safe-area-inset-left);
+      padding-right:  env(safe-area-inset-right);
+    }
+
+    /* ── screens ─────────────────────────────────────────────── */
+    .screen {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      transition: opacity .22s;
+    }
+    .screen.hidden { opacity: 0; pointer-events: none; }
+
+    /* ══════════════════════════════════════════════════════════
+       SETUP SCREEN
+    ══════════════════════════════════════════════════════════ */
+    .setup-box {
+      background: linear-gradient(170deg, #fff9c4 0%, #ffffff 50%, #e1f5fe 100%);
+      border-radius: 24px;
+      padding: 28px 32px;
+      box-shadow: 0 10px 40px rgba(2,136,209,.25), 0 2px 8px rgba(0,0,0,.08);
+      width: min(520px, 94vw);
+      max-height: 92vh;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      border: 2px solid rgba(255,255,255,.6);
+    }
+
+    .setup-title {
+      color: #e65100; font-size: 1.65em;
+      text-align: center; margin-bottom: 3px;
+    }
+    .setup-subtitle {
+      color: #0277bd; text-align: center;
+      font-size: 0.86em; margin-bottom: 22px;
+    }
+
+    .section-label {
+      font-size: 0.78em; font-weight: 700; color: #0288d1;
+      text-transform: uppercase; letter-spacing: .06em;
+      margin-bottom: 9px;
+    }
+
+    /* ── country grid ── */
+    .country-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+      gap: 6px;
+      margin-bottom: 22px;
+      max-height: 260px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      padding-right: 2px;
+    }
+
+    .country-btn {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 3px; padding: 8px 4px;
+      border: 2px solid #b3e5fc;
+      border-radius: 12px; background: white;
+      cursor: pointer; transition: all .18s;
+      font-size: 0.78em; text-align: center; line-height: 1.2;
+      min-height: 60px;
+    }
+    .country-btn .flag { font-size: 1.7em; line-height: 1; }
+    .country-btn .cname { color: #555; }
+
+    .country-btn.active {
+      border-color: #ff9800; background: #fff3e0;
+      box-shadow: 0 0 0 2px #ff9800;
+    }
+    .country-btn.active .cname { color: #e65100; font-weight: 700; }
+
+    .country-btn.unavailable {
+      opacity: .3; cursor: not-allowed;
+      background: #f5f5f5;
+    }
+
+    /* ── player count ── */
+    .count-row {
+      display: flex; gap: 9px;
+      justify-content: center; margin-bottom: 18px;
+    }
+    .count-btn {
+      width: 44px; height: 44px;
+      border: 2px solid #b3e5fc; border-radius: 50%;
+      background: white; font-size: 1.05em; color: #0277bd;
+      cursor: pointer; transition: all .16s;
+    }
+    .count-btn.active {
+      border-color: #ff9800; background: #ff9800; color: white;
+      box-shadow: 0 2px 8px rgba(255,152,0,.4);
+    }
+
+    /* ── name inputs ── */
+    .player-inputs { display: flex; flex-direction: column; gap: 8px; margin-bottom: 22px; }
+    .player-row { display: flex; align-items: center; gap: 10px; }
+    .player-row label {
+      width: 96px; flex-shrink: 0;
+      font-size: 0.82em; font-weight: 600; color: #666;
+    }
+    .player-row input {
+      flex: 1; padding: 7px 11px;
+      border: 1.5px solid #ddd; border-radius: 8px;
+      font-size: 0.91em; outline: none; transition: border-color .14s;
+    }
+    .player-row input:focus { border-color: #ff9800; }
+
+    .start-btn {
+      width: 100%; padding: 12px;
+      background: linear-gradient(135deg, #ff9800, #f44336);
+      color: white; font-weight: 700;
+      border: none; border-radius: 14px;
+      font-size: 1.05em; cursor: pointer;
+      transition: all .18s;
+      box-shadow: 0 4px 12px rgba(244,67,54,.3);
+    }
+    .start-btn:hover { background: linear-gradient(135deg, #fb8c00, #e53935); transform: translateY(-1px); }
+
+    /* ══════════════════════════════════════════════════════════
+       GAME SCREEN
+    ══════════════════════════════════════════════════════════ */
+    #game-screen { flex-direction: column; align-items: stretch; }
+
+    .scorebar {
+      flex-shrink: 0;
+      display: flex; align-items: center;
+      justify-content: space-between;
+      padding: 6px 14px; gap: 8px;
+      background: linear-gradient(90deg, rgba(255,249,196,.85), rgba(225,245,254,.85));
+      backdrop-filter: blur(6px);
+      border-bottom: 2px solid rgba(255,152,0,.2);
+      flex-wrap: wrap;
+    }
+
+    #scores { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    .player-score {
+      display: flex; flex-direction: column; align-items: center;
+      padding: 4px 14px; border-radius: 20px;
+      background: rgba(255,255,255,.7);
+      border: 2px solid #b3e5fc;
+      transition: all .26s; min-width: 66px;
+    }
+    .player-score.active {
+      background: linear-gradient(135deg, #ff9800, #f44336); color: white;
+      border-color: #e65100;
+      box-shadow: 0 2px 10px rgba(255,152,0,.45);
+    }
+    .player-score .p-name  { font-size: 0.74em; font-weight: 600; white-space: nowrap; }
+    .player-score .p-score { font-size: 1.2em; font-weight: 700; }
+
+    .scorebar-right { display: flex; align-items: center; gap: 10px; }
+    #pairs-left { font-size: 0.82em; color: #0277bd; }
+    .menu-btn {
+      padding: 5px 13px; border-radius: 16px;
+      border: none; background: #fff3e0; color: #e65100;
+      cursor: pointer; font-size: 0.83em; font-weight: 600;
+      transition: all .16s;
+    }
+    .menu-btn:hover { background: #ffe0b2; }
+
+    .grid-wrapper {
+      flex: 1; overflow: hidden;
+      padding: 10px;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      grid-template-rows: repeat(5, 1fr);
+      gap: 6px;
+      width: 100%; height: 100%;
+      max-width: 1100px;
+    }
+
+    /* ── cards ──────────────────────────────────────────────── */
+    .card { cursor: pointer; perspective: 900px; user-select: none; }
+
+    .card-inner {
+      width: 100%; height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform .42s cubic-bezier(.4,0,.2,1);
+      border-radius: 10px;
+    }
+    .card.flipped .card-inner,
+    .card.matched .card-inner { transform: rotateY(180deg); }
+
+    .card-face {
+      position: absolute; inset: 0;
+      backface-visibility: hidden;
+      border-radius: 12px; overflow: hidden;
+      box-shadow: 0 3px 12px rgba(2,136,209,.22);
+    }
+
+    .card-back {
+      background: linear-gradient(135deg, #4fc3f7 0%, #0288d1 100%);
+      overflow: hidden;
+    }
+    .card-back svg {
+      width: 100%; height: 100%; display: block;
+    }
+
+    .card-front {
+      transform: rotateY(180deg);
+      display: flex; flex-direction: column; align-items: center;
+    }
+
+    .image-card img {
+      flex: 1; width: 100%; object-fit: cover; min-height: 0;
+      transition: opacity .3s;
+    }
+    .image-card img.loading { opacity: 0; }
+    .image-card img.loaded  { opacity: 1; }
+    .image-card .no-img {
+      flex: 1; width: 100%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: clamp(1.5em, 3vw, 2.5em);
+    }
+
+    .card-label {
+      width: 100%; padding: 5px 4px; flex-shrink: 0;
+      text-align: center; font-weight: 700;
+      font-size: clamp(0.58em, 1.1vw, 0.82em);
+      background: rgba(2,136,209,.12); color: #01579b;
+    }
+
+    .sound-card { justify-content: flex-end; }
+    .sound-card .speaker {
+      flex: 1;
+      display: flex; align-items: center; justify-content: center;
+      transition: transform .15s;
+      padding: 4px;
+    }
+    .sound-card .speaker svg { display: block; }
+    .sound-card.playing .speaker { transform: scale(1.1); }
+
+    @keyframes cardPop {
+      0%   { transform: rotateY(180deg) scale(1);    opacity: 1; }
+      40%  { transform: rotateY(180deg) scale(1.07); opacity: 1; }
+      100% { transform: rotateY(180deg) scale(0);    opacity: 0; }
+    }
+    .card.disappearing .card-inner { animation: cardPop .5s ease-in forwards; }
+    .card.gone { visibility: hidden; cursor: default; }
+
+    /* ══════════════════════════════════════════════════════════
+       PAUSE OVERLAY  (sits on top of game screen)
+    ══════════════════════════════════════════════════════════ */
+    #pause-overlay {
+      position: absolute; inset: 0;
+      background: rgba(1,87,155,.55);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 5;
+      transition: opacity .2s;
+    }
+    #pause-overlay.hidden { opacity: 0; pointer-events: none; }
+
+    .pause-box {
+      background: linear-gradient(170deg, #fff9c4, #ffffff, #e1f5fe);
+      border-radius: 22px;
+      padding: 34px 44px; text-align: center;
+      box-shadow: 0 12px 40px rgba(2,136,209,.3);
+      min-width: 240px;
+      border: 2px solid rgba(255,255,255,.6);
+    }
+    .pause-box h2 { font-size: 1.5em; color: #e65100; margin-bottom: 6px; }
+    .pause-box p  { color: #0277bd; font-size: 0.88em; margin-bottom: 24px; }
+
+    .pause-btns { display: flex; flex-direction: column; gap: 10px; }
+    .pause-btn {
+      padding: 11px 20px; border: none; border-radius: 12px;
+      font-size: 0.97em; font-weight: 600; cursor: pointer; transition: all .16s;
+    }
+    .pause-btn.primary   { background: linear-gradient(135deg, #4caf50, #2e7d32); color: white; box-shadow: 0 2px 8px rgba(76,175,80,.3); }
+    .pause-btn.primary:hover { transform: translateY(-1px); }
+    .pause-btn.secondary { background: #e1f5fe; color: #0277bd; }
+    .pause-btn.secondary:hover { background: #b3e5fc; }
+
+    /* ══════════════════════════════════════════════════════════
+       WIN SCREEN
+    ══════════════════════════════════════════════════════════ */
+    #win-screen { background: rgba(1,87,155,.5); z-index: 10; }
+
+    .win-box {
+      background: linear-gradient(170deg, #fff9c4, #ffffff, #e1f5fe);
+      border-radius: 24px;
+      padding: 34px 46px; text-align: center;
+      box-shadow: 0 14px 45px rgba(2,136,209,.35);
+      max-width: 360px; width: 90vw;
+      border: 2px solid rgba(255,255,255,.6);
+    }
+    .win-box h2 { font-size: 1.75em; color: #e65100; margin-bottom: 16px; }
+
+    .result-table {
+      width: 100%; border-collapse: collapse; margin-bottom: 20px;
+    }
+    .result-table th {
+      color: #0288d1; font-weight: 600; font-size: 0.8em;
+      padding: 3px 10px; border-bottom: 2px solid #b3e5fc;
+    }
+    .result-table td { padding: 7px 10px; font-size: 0.95em; color: #333; }
+    .result-table tr.winner td { font-weight: 700; color: #e65100; font-size: 1.05em; }
+
+    .win-btns { display: flex; flex-direction: column; gap: 9px; }
+    .win-btn {
+      padding: 10px 28px; border: none; border-radius: 12px;
+      font-size: 0.96em; font-weight: 600; cursor: pointer; transition: all .18s;
+    }
+    .win-btn.primary   { background: linear-gradient(135deg, #ff9800, #f44336); color: white; box-shadow: 0 3px 10px rgba(244,67,54,.3); }
+    .win-btn.primary:hover { transform: translateY(-1px); }
+    .win-btn.secondary { background: #e1f5fe; color: #0277bd; }
+    .win-btn.secondary:hover { background: #b3e5fc; }
+  </style>
+</head>
+<body>
+
+<!-- ══ SETUP SCREEN ══════════════════════════════════════════ -->
+<div id="setup-screen" class="screen">
+  <div class="setup-box">
+    <h1 class="setup-title">🐦 Vogel Memory</h1>
+    <p class="setup-subtitle">Leer vogelgeluiden spelenderwijs</p>
+
+    <p class="section-label">Kies een land</p>
+    <div class="country-grid" id="country-grid"></div>
+
+    <p class="section-label">Aantal deelnemers</p>
+    <div class="count-row" id="count-row"></div>
+
+    <p class="section-label" id="names-label">Namen</p>
+    <div class="player-inputs" id="player-inputs"></div>
+
+    <button class="start-btn" onclick="startGame()">Spelen ▶</button>
+  </div>
+</div>
+
+<!-- ══ GAME SCREEN ═══════════════════════════════════════════ -->
+<div id="game-screen" class="screen hidden">
+  <div class="scorebar">
+    <div id="scores"></div>
+    <div class="scorebar-right">
+      <span id="pairs-left"></span>
+      <button class="menu-btn" onclick="openPause()">☰ Menu</button>
+    </div>
+  </div>
+  <div class="grid-wrapper">
+    <div class="grid" id="grid"></div>
+  </div>
+
+  <!-- Pause overlay — lives inside game screen so game stays rendered -->
+  <div id="pause-overlay" class="hidden">
+    <div class="pause-box">
+      <h2>⏸ Gepauzeerd</h2>
+      <p id="pause-info"></p>
+      <div class="pause-btns">
+        <button class="pause-btn primary"   onclick="closePause()">▶ Doorgaan</button>
+        <button class="pause-btn secondary" onclick="goToSetup()">☰ Nieuw spel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ WIN SCREEN ════════════════════════════════════════════ -->
+<div id="win-screen" class="screen hidden">
+  <div class="win-box">
+    <h2>🎉 Geweldig!</h2>
+    <table class="result-table">
+      <thead><tr><th>Naam</th><th>Paren</th></tr></thead>
+      <tbody id="result-body"></tbody>
+    </table>
+    <div class="win-btns">
+      <button class="win-btn primary"   onclick="replayGame()">↺ Zelfde spelers</button>
+      <button class="win-btn secondary" onclick="goToSetup()">☰ Nieuw spel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   COUNTRY + BIRD DATA
+   ============================================================ */
+const WM = "https://commons.wikimedia.org/wiki/Special:FilePath/";
+
+// Only Netherlands has bird data for now; others are placeholders (active: false)
+const COUNTRIES = [
+  {
+    id:"nederland", name:"Nederland", flag:"🇳🇱", active:true,
+    catalogKey: "nl",
+    participantWord: "Deelnemer",
+    birds: [
+      // ── 25 meest voorkomende vogels in Nederland ──────────────
+      {
+        id:"merel", name:"Merel", color:"#FFCDD2",
+        image:"Common_Blackbird.jpg",
+        sounds:[
+          "Turdus_merula_2.ogg",
+          "Common_Blackbird_(Turdus_merula)_(W1CDR0001525_BD22).ogg"
+        ]
+      },
+      {
+        id:"koolmees", name:"Koolmees", color:"#FFE0B2",
+        image:"Parus_major_Luc_Viatour.jpg",
+        sounds:[
+          "Parus_major_song.ogg",
+          "Great_Tit_(Parus_major)_(W1CDR0001393_BD1).ogg"
+        ]
+      },
+      {
+        id:"roodborst", name:"Roodborst", color:"#FFF9C4",
+        image:"Erithacus_rubecula_with_cocked_head.jpg",
+        sounds:[
+          "XC27161_-_Roodborst_-_Erithacus_rubecula.ogg",
+          "European_Robin_(Erithacus_rubecula)_(W1CDR0001425_BD16).ogg"
+        ]
+      },
+      {
+        id:"kauw", name:"Kauw", color:"#C8E6C9",
+        image:"Corvus_monedula_01.JPG",
+        sounds:["Corvus_monedula_calls.ogg"]
+      },
+      {
+        id:"spreeuw", name:"Spreeuw", color:"#BBDEFB",
+        image:"European_Starling_2006.jpg",
+        sounds:[
+          "Sturnus_vulgaris_juveniles_sound_recording.ogg",
+          "Common_Starling_(Sturnus_vulgaris)_(W1CDR0001431_BD8).ogg"
+        ]
+      },
+      {
+        id:"huismus", name:"Huismus", color:"#E1BEE7",
+        image:"House_Sparrow_Male_(Passer_Domesticus).jpg",
+        sounds:["House_Sparrows_(Passer_domesticus)_(W1CDR0001537_BD13).ogg"]
+      },
+      {
+        id:"vink", name:"Vink", color:"#F8BBD0",
+        image:"2017.03.25.-01-Kaefertaler_Wald-Mannheim--Buchfink-Maennchen.jpg",
+        sounds:["Chaffinch_(Fringilla_coelebs)_(W1CDR0001527_BD14).ogg"]
+      },
+      {
+        id:"houtduif", name:"Houtduif", color:"#D7CCC8",
+        image:"Common_Wood_Pigeon_(Columba_palumbus).JPG",
+        sounds:["Columba_palumbus_birdsong.ogg"]
+      },
+      {
+        id:"pimpelmees", name:"Pimpelmees", color:"#B2EBF2",
+        image:"2015.01.06.-Mannheim_Vogelstang--Blaumeise.jpg",
+        sounds:[
+          "Cyanistes_caeruleus_-_Eurasian_Blue_Tit_XC125793.ogg",
+          "Blue_Tit_(Cyanistes_caeruleus)_(W1CDR0001535_BD30).ogg"
+        ]
+      },
+      {
+        id:"heggenmus", name:"Heggenmus", color:"#DCEDC8",
+        image:"Dunnock.jpg",
+        sounds:["Dunnock_(Prunella_modularis)_(W1CDR0001422_BD6).ogg"]
+      },
+      {
+        id:"tjiftjaf", name:"Tjiftjaf", color:"#FFE57F",
+        image:"Chiffchaff_-_Phylloscopus_collybita.jpg",
+        sounds:[
+          "Phylloscopus_collybita_-_Common_Chiffchaff_XC125867.ogg",
+          "Chiffchaff_(Phylloscopus_collybita)_(W1CDR0001497_BD9).ogg"
+        ]
+      },
+      {
+        id:"winterkoning", name:"Winterkoning", color:"#FFCCBC",
+        image:"Troglodytes_troglodytes_fumigatus.JPG",
+        sounds:["Eurasian_Wren_(Troglodytes_troglodytes)_(W1CDR0001461_BD5).ogg"]
+      },
+      {
+        id:"zanglijster", name:"Zanglijster", color:"#CFD8DC",
+        image:"Song_Thrush_(Turdus_philomelos)_singing_in_tree.jpg",
+        sounds:[
+          "Turdus_philomelos.ogg",
+          "Turdus_philomelos_816.ogg"
+        ]
+      },
+      {
+        id:"groenling", name:"Groenling", color:"#F0F4C3",
+        image:"Greenfinch_(Chloris_chloris)_Zelentarka.jpg",
+        sounds:["Carduelis_chloris.ogg"]
+      },
+      {
+        id:"kievit", name:"Kievit", color:"#E8EAF6",
+        image:"Vanellus_vanellus_in_flight_3.JPG",
+        sounds:["Northern_Lapwing_(Vanellus_vanellus)_(W1CDR0001471_BD4).ogg"]
+      },
+      // ── 10 extra vogels (totaal 25, spel kiest er altijd 15) ──
+      {
+        id:"ekster", name:"Ekster", color:"#F3E5F5",
+        images:["Eurasian_magpie_(Pica_pica).jpg","Pica_pica_perched_on_branch.jpg"],
+        sounds:["Eurasian_Magpie_(Pica_pica)_(W1CDR0001537_BD28).ogg","Pica_pica_-_Eurasian_Magpie_XC537413.mp3"]
+      },
+      {
+        id:"kraai", name:"Zwarte Kraai", color:"#ECEFF1",
+        images:["Corvus_corone_20070813.jpg","FL-Crow.jpg"],
+        sounds:["Carrion_Crow_(Corvus_corone)_(W1CDR0001425_BD18).ogg","Corvus_corone_-_Carrion_Crow_XC466390.mp3"]
+      },
+      {
+        id:"gaai", name:"Gaai", color:"#E8F5E9",
+        images:["Garrulus_glandarius_1_Luc_Viatour.jpg","Garrulus_glandarius_B_Luc_Viatour.jpg"],
+        sounds:["Garrulus_glandarius_iphigenia.ogg"]
+      },
+      {
+        id:"wilde-eend", name:"Wilde Eend", color:"#E0F7FA",
+        images:["Anas_platyrhynchos_male_female.jpg","Male_mallard_duck_2.jpg"],
+        sounds:["Anas_platyrhynchos_-_Mallard_-_XC62258.ogg"]
+      },
+      {
+        id:"meerkoet", name:"Meerkoet", color:"#FCE4EC",
+        images:["Eurasian_coot_(Fulica_atra)_05.jpg","Eurasian.coot.london.arp.jpg"],
+        sounds:["Eurasian_Coot_(Fulica_atra)_(W1CDR0001430_BD10).ogg"]
+      },
+      {
+        id:"boerenzwaluw", name:"Boerenzwaluw", color:"#FFF3E0",
+        images:["Hirundo_rustica_Ormoz.jpg","Hirundo_rustica_LC0200.jpg"],
+        sounds:["Hirundo_rustica_-_Barn_Swallow_-_XC83449.ogg","Hirundo_rustica_-_Barn_Swallow_XC422028.mp3"]
+      },
+      {
+        id:"gierzwaluw", name:"Gierzwaluw", color:"#E3F2FD",
+        images:["Apus_apus.jpg","Apus_apus_inflight.jpg"],
+        sounds:["Mauersegler.ogg"]
+      },
+      {
+        id:"koekoek", name:"Koekoek", color:"#F1F8E9",
+        images:["Kuckuck_(Cuculus_canorus)_by_Tim_Peukert.jpg","Kuckuck_maennchen.jpg"],
+        sounds:["Cuculus_canorus.ogg","Cuculus_canorus_song.ogg"]
+      },
+      {
+        id:"nachtegaal", name:"Nachtegaal", color:"#EDE7F6",
+        images:["Nachtigall_(Luscinia_megarhynchos)-2.jpg","Nachtigall_singend_Stromkabel.jpg"],
+        sounds:["Common_Nightingale_(Luscinia_megarhynchos)_(W1CDR0001376_BD18).ogg","XN_Luscinia_megarhynchos_017.ogg"]
+      },
+      {
+        id:"gr-bonte-specht", name:"Grote Bonte Specht", color:"#FFF8E1",
+        images:["Great_Spotted_Woodpecker-Mindaugas_Urbonas.jpg","Woodpecker-nestos-river-thrace-greece-0a.jpg"],
+        sounds:["XC47350_-_Grote_Bonte_Specht_-_Dendrocopos_major.ogg","Great_Spotted_Woodpecker_(Picoides_major)_(W1CDR0001405_BD15).ogg"]
+      },
+    ]
+  },
+  { id:"albanien",    name:"Albanië",          flag:"🇦🇱", active:false },
+  { id:"andorra",     name:"Andorra",           flag:"🇦🇩", active:false },
+  { id:"belgie",      name:"België",            flag:"🇧🇪", active:false },
+  { id:"bosnie",      name:"Bosnië",            flag:"🇧🇦", active:false },
+  { id:"bulgarije",   name:"Bulgarije",         flag:"🇧🇬", active:false },
+  { id:"cyprus",      name:"Cyprus",            flag:"🇨🇾", active:false },
+  { id:"denemarken",  name:"Denemarken",        flag:"🇩🇰", active:false },
+  { id:"duitsland",   name:"Duitsland",         flag:"🇩🇪", active:false },
+  { id:"estland",     name:"Estland",           flag:"🇪🇪", active:false },
+  { id:"finland",     name:"Finland",           flag:"🇫🇮", active:false },
+  { id:"frankrijk",   name:"Frankrijk",         flag:"🇫🇷", active:false },
+  { id:"griekenland", name:"Griekenland",       flag:"🇬🇷", active:false },
+  { id:"hongarije",   name:"Hongarije",         flag:"🇭🇺", active:false },
+  { id:"ierland",     name:"Ierland",           flag:"🇮🇪", active:false },
+  { id:"ijsland",     name:"IJsland",           flag:"🇮🇸", active:false },
+  { id:"italie",      name:"Italië",            flag:"🇮🇹", active:false },
+  { id:"kosovo",      name:"Kosovo",            flag:"🇽🇰", active:false },
+  { id:"kroatie",     name:"Kroatië",           flag:"🇭🇷", active:false },
+  { id:"letland",     name:"Letland",           flag:"🇱🇻", active:false },
+  { id:"liechtenstein",name:"Liechtenstein",   flag:"🇱🇮", active:false },
+  { id:"litouwen",    name:"Litouwen",          flag:"🇱🇹", active:false },
+  { id:"luxemburg",   name:"Luxemburg",         flag:"🇱🇺", active:false },
+  { id:"malta",       name:"Malta",             flag:"🇲🇹", active:false },
+  { id:"moldavie",    name:"Moldavië",          flag:"🇲🇩", active:false },
+  { id:"monaco",      name:"Monaco",            flag:"🇲🇨", active:false },
+  { id:"montenegro",  name:"Montenegro",        flag:"🇲🇪", active:false },
+  { id:"noord-macedonie", name:"N.-Macedonië",  flag:"🇲🇰", active:false },
+  { id:"noorwegen",   name:"Noorwegen",          flag:"🇳🇴", active:false },
+  { id:"oekraine",    name:"Oekraïne",           flag:"🇺🇦", active:false },
+  { id:"oostenrijk",  name:"Oostenrijk",         flag:"🇦🇹", active:false },
+  { id:"polen",       name:"Polen",              flag:"🇵🇱", active:false },
+  { id:"portugal",    name:"Portugal",           flag:"🇵🇹", active:false },
+  { id:"roemenie",    name:"Roemenië",           flag:"🇷🇴", active:false },
+  { id:"rusland",     name:"Rusland",            flag:"🇷🇺", active:false },
+  { id:"san-marino",  name:"San Marino",         flag:"🇸🇲", active:false },
+  { id:"servie",      name:"Servië",             flag:"🇷🇸", active:false },
+  { id:"slovakije",   name:"Slowakije",          flag:"🇸🇰", active:false },
+  { id:"slovenie",    name:"Slovenië",           flag:"🇸🇮", active:false },
+  {
+    id:"spanje", name:"Spanje", flag:"🇪🇸", active:true,
+    catalogKey: "es",           // curator localStorage key
+    participantWord: "Participante",
+    birds: [
+      {id:"gorr-comun",   name:"Gorrión común",      color:"#FFCDD2", images:["House_Sparrow_Male_(Passer_Domesticus).jpg"], sounds:["House_Sparrows_(Passer_domesticus)_(W1CDR0001537_BD13).ogg"]},
+      {id:"mirlo-comun",  name:"Mirlo común",        color:"#FFE0B2", images:["Common_Blackbird.jpg"], sounds:["Turdus_merula_2.ogg","Common_Blackbird_(Turdus_merula)_(W1CDR0001525_BD22).ogg"]},
+      {id:"golondrina",   name:"Golondrina común",   color:"#FFF9C4", images:["Hirundo_rustica_Ormoz.jpg"], sounds:["Hirundo_rustica_-_Barn_Swallow_-_XC83449.ogg","Hirundo_rustica_-_Barn_Swallow_XC422028.mp3"]},
+      {id:"verdecillo",   name:"Verdecillo",          color:"#C8E6C9", images:["European_serin_(Serinus_serinus)_male.jpg","Serinus_serinus_(Madrid,_Spain)_010.jpg"], sounds:["Gulhämpling_-_Serinus_serinus._Ystad-Sweden-2012.ogg","Serinus_serinus_-_European_Serin_XC483089.mp3"]},
+      {id:"jilguero",     name:"Jilguero",            color:"#BBDEFB", images:["Carduelis_carduelis_close_up_2.jpg","European_Goldfinch_on_Spear_Thistle.jpg"], sounds:["XC101464_-_Putter_-_Carduelis_carduelis.ogg","European_Goldfinch_(Carduelis_carduelis)_(W1CDR0001491_BD15).ogg"]},
+      {id:"pinzon",       name:"Pinzón vulgar",       color:"#E1BEE7", images:["2017.03.25.-01-Kaefertaler_Wald-Mannheim--Buchfink-Maennchen.jpg"], sounds:["Chaffinch_(Fringilla_coelebs)_(W1CDR0001527_BD14).ogg","XC176182_-_Vink_-_Fringilla_coelebs.ogg"]},
+      {id:"carbonero",    name:"Carbonero común",     color:"#F8BBD0", images:["Parus_major_Luc_Viatour.jpg"], sounds:["Parus_major_song.ogg","Great_Tit_(Parus_major)_(W1CDR0001393_BD1).ogg"]},
+      {id:"herrerillo",   name:"Herrerillo común",    color:"#B2EBF2", images:["2015.01.06.-Mannheim_Vogelstang--Blaumeise.jpg"], sounds:["Cyanistes_caeruleus_-_Eurasian_Blue_Tit_XC125793.ogg","Blue_Tit_(Cyanistes_caeruleus)_(W1CDR0001535_BD30).ogg"]},
+      {id:"petirrojo",    name:"Petirrojo",           color:"#DCEDC8", images:["Erithacus_rubecula_with_cocked_head.jpg"], sounds:["XC27161_-_Roodborst_-_Erithacus_rubecula.ogg","European_Robin_(Erithacus_rubecula)_(W1CDR0001525_BD17).ogg"]},
+      {id:"curruca-cap",  name:"Curruca capirotada",  color:"#FFE57F", images:["Sylvia_atricapilla_male_2.jpg","Female_Blackcap.JPG"], sounds:["Sylvia_atricapilla_-_Eurasian_Blackcap_XC241427.mp3","Sylvia_atricapilla.ogg"]},
+      {id:"mosquitero",   name:"Mosquitero común",    color:"#FFCCBC", images:["Chiffchaff_-_Phylloscopus_collybita.jpg"], sounds:["Phylloscopus_collybita_-_Common_Chiffchaff_XC125867.ogg","Chiffchaff_(Phylloscopus_collybita)_(W1CDR0001497_BD9).ogg"]},
+      {id:"cogujada",     name:"Cogujada común",      color:"#CFD8DC", images:["Crested_Lark_(22026336489).jpg","Galerida_cristata_meridionalis.jpg"], sounds:[]},
+      {id:"paloma-torcaz",name:"Paloma torcaz",       color:"#F0F4C3", images:["Common_Wood_Pigeon_(Columba_palumbus).JPG"], sounds:["Columba_palumbus_birdsong.ogg","Columba_palumbus_-_Common_Wood_Pigeon_XC108354.mp3"]},
+      {id:"tortola-turca",name:"Tórtola turca",       color:"#E8EAF6", images:["Tourterelle.jpg","Eurasian_Collared_Dove-Mindaugas_Urbonas-1.jpg"], sounds:["Streptopelia_decaocto_-_Eurasian_Collared_Dove_-_XC82758.ogg","Tourterelle.ogg"]},
+      {id:"abubilla",     name:"Abubilla",            color:"#FFF3E0", images:["Upupa_epops_Madrid_01.jpg","Upupa_epops_su_un_ciliegio.jpg"], sounds:["Abubilla.ogg","Upupa_epops_·_XC135728.ogg"]},
+      {id:"urraca-es",    name:"Urraca",              color:"#F3E5F5", images:["Eurasian_magpie_(Pica_pica).jpg"], sounds:["Eurasian_Magpie_(Pica_pica)_(W1CDR0001537_BD28).ogg","Pica_pica_-_Eurasian_Magpie_XC537413.mp3"]},
+      {id:"corneja-es",   name:"Corneja negra",       color:"#ECEFF1", images:["Corvus_corone_20070813.jpg"], sounds:["Carrion_Crow_(Corvus_corone)_(W1CDR0001425_BD18).ogg","Corvus_corone_-_Carrion_Crow_XC461980.mp3"]},
+      {id:"estornino-es", name:"Estornino pinto",     color:"#E8F5E9", images:["Common_Starling_(Sturnus_vulgaris)_Leek_Wootton.jpg"], sounds:["Common_Starling_(Sturnus_vulgaris)_(W1CDR0001431_BD8).ogg","Sturnus_vulgaris_-_Common_Starling_XC474427.mp3"]},
+      {id:"verdejon",     name:"Verderón común",      color:"#FCE4EC", images:["Greenfinch_(Chloris_chloris)_Zelentarka.jpg"], sounds:["Carduelis_chloris.ogg"]},
+      {id:"vencejo-es",   name:"Vencejo común",       color:"#E0F7FA", images:["Apus_apus.jpg","Apus_apus_inflight.jpg"], sounds:["Mauersegler.ogg"]},
+      {id:"lavandera",    name:"Lavandera blanca",    color:"#FFF8E1", images:["Motacilla_alba_alba.JPG","Pied_Wagtail_perching.jpg"], sounds:["Motacilla_alba_-_White_Wagtail_XC466458.mp3","Motacilla_alba_-_White_Wagtail_XC501786.mp3"]},
+      {id:"abejaruco",    name:"Abejaruco",           color:"#F1F8E9", images:["Abejaruco_sobre_higuera.jpg","Merops_apiaster_04.jpg"], sounds:["Merops_apiaster_-_European_Bee-eater_XC477953.mp3","Bijeneter_-_SoundCloud_-_Beeld_en_Geluid.ogg"]},
+      {id:"cuco-es",      name:"Cuco común",          color:"#EDE7F6", images:["Kuckuck_(Cuculus_canorus)_by_Tim_Peukert.jpg"], sounds:["Cuculus_canorus.ogg","Cuculus_canorus_song.ogg"]},
+      {id:"lechuza",      name:"Lechuza común",       color:"#E8EAF6", images:["Barn_Owl_in_Norfolk.jpg","Flying_owl.jpg"], sounds:["Tyto_alba_-_Western_Barn_Owl_XC432000.mp3","Tyto_alba_-_Western_Barn_Owl_XC433736.mp3"]},
+      {id:"ciguena",      name:"Cigüeña blanca",      color:"#F3E5F5", images:["White_Stork_Weißstorch_Ciconia_ciconia.jpg","Ooievaar_in_het_Zwin.jpg"], sounds:["Ciconia_ciconia_bill-clattering.ogg","Klapperstorch.ogg"]},
+    ]
+  },
+  { id:"tsjechie",    name:"Tsjechië",           flag:"🇨🇿", active:false },
+  { id:"turkije",     name:"Turkije",            flag:"🇹🇷", active:false },
+  { id:"uk",          name:"Ver. Koninkrijk",    flag:"🇬🇧", active:false },
+  { id:"vaticaan",    name:"Vaticaan",           flag:"🇻🇦", active:false },
+  { id:"wit-rusland", name:"Wit-Rusland",        flag:"🇧🇾", active:false },
+  { id:"zweden",      name:"Zweden",             flag:"🇸🇪", active:false },
+  { id:"zwitserland", name:"Zwitserland",        flag:"🇨🇭", active:false },
+];
+
+/* ============================================================
+   SETUP STATE
+   ============================================================ */
+let selectedCountry = COUNTRIES.find(c => c.id === "nederland");
+let numPlayers = 1;
+
+function initSetup() {
+  buildCountryGrid();
+  buildCountRow();
+  renderPlayerInputs();
+}
+
+function buildCountryGrid() {
+  const grid = document.getElementById("country-grid");
+  grid.innerHTML = "";
+  COUNTRIES.forEach(c => {
+    const btn = document.createElement("button");
+    btn.className = "country-btn" +
+      (c.active ? "" : " unavailable") +
+      (c.id === selectedCountry.id ? " active" : "");
+    btn.innerHTML = `<span class="flag">${c.flag}</span><span class="cname">${c.name}</span>`;
+    btn.title = c.active ? c.name : `${c.name} (binnenkort beschikbaar)`;
+    if (c.active) {
+      btn.onclick = () => selectCountry(c);
+    }
+    grid.appendChild(btn);
+  });
+}
+
+function selectCountry(c) {
+  selectedCountry = c;
+  buildCountryGrid();
+  updateNamesLabel();
+  renderPlayerInputs();
+}
+
+function buildCountRow() {
+  const row = document.getElementById("count-row");
+  row.innerHTML = "";
+  [1,2,3,4,5].forEach(n => {
+    const btn = document.createElement("button");
+    btn.className = "count-btn" + (n === numPlayers ? " active" : "");
+    btn.textContent = n;
+    btn.onclick = () => selectCount(n);
+    row.appendChild(btn);
+  });
+}
+
+function selectCount(n) {
+  numPlayers = n;
+  document.querySelectorAll(".count-btn").forEach((b, i) =>
+    b.classList.toggle("active", i + 1 === n)
+  );
+  renderPlayerInputs();
+}
+
+function participantWord() {
+  return selectedCountry.participantWord || "Deelnemer";
+}
+
+function updateNamesLabel() {
+  // Label above name inputs reflects the chosen country's word
+}
+
+function renderPlayerInputs() {
+  const container = document.getElementById("player-inputs");
+  const prev = Array.from(container.querySelectorAll("input")).map(i => i.value);
+  container.innerHTML = "";
+  const word = participantWord();
+  for (let i = 0; i < numPlayers; i++) {
+    const row = document.createElement("div");
+    row.className = "player-row";
+    const lbl = document.createElement("label");
+    lbl.textContent = `${word} ${i + 1}`;
+    const inp = document.createElement("input");
+    inp.type = "text";
+    inp.placeholder = `${word} ${i + 1}`;
+    inp.value = prev[i] || "";
+    row.appendChild(lbl);
+    row.appendChild(inp);
+    container.appendChild(row);
+  }
+}
+
+/* ============================================================
+   GAME STATE
+   ============================================================ */
+let players        = [];
+let currentIdx     = 0;
+let birdList       = [];
+let flipped        = [];
+let locked         = false;
+let remainingPairs = 0;
+let paused         = false;
+
+// audio — Web Audio API
+let audioCtx     = null;   // lazy init
+let audioCache   = {};     // url → AudioBuffer
+let activeSource = null;   // huidig BufferSourceNode
+let activeFadeGain = null; // huidig GainNode
+let activeAudio  = null;   // fallback HTMLAudioElement
+let activeFront  = null;
+let fadeTimerId  = null;
+
+function getAudioCtx() {
+  if (!audioCtx)
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+
+/* ============================================================
+   START / REPLAY
+   ============================================================ */
+function startGame() {
+  const inputs = document.querySelectorAll("#player-inputs input");
+  const word   = participantWord();
+  players = Array.from(inputs).map((inp, i) => ({
+    name:  inp.value.trim() || `${word} ${i + 1}`,
+    score: 0
+  }));
+  launchGame();
+}
+
+function replayGame() {
+  // Same players, reset scores
+  players.forEach(p => p.score = 0);
+  launchGame();
+}
+
+function launchGame() {
+  currentIdx = 0;
+  flipped    = [];
+  locked     = false;
+  paused     = false;
+
+  // Haal de volledige catalogus op en filter op actieve vogels via curator-instellingen
+  const allBirds   = selectedCountry.birds || [];
+  const catalog    = loadCuratorState();
+  const GAME_SIZE  = 15;
+
+  let activeBirds;
+  if (catalog) {
+    // Pas curator-instellingen toe: filter uitgeschakelde vogels
+    activeBirds = allBirds
+      .filter(b => catalog[b.id]?.enabled !== false)
+      .map(b => {
+        const cs = catalog[b.id];
+        if (!cs) return b;
+        return {
+          ...b,
+          images: cs.images?.length ? cs.images : (b.images || [b.image]),
+          sounds: cs.sounds?.length
+            ? cs.sounds.map(s => s.file)
+            : b.sounds,
+          soundStarts: Object.fromEntries(
+            (cs.sounds || []).map(s => [s.file, s.start || 0])
+          ),
+        };
+      });
+  } else {
+    activeBirds = allBirds;
+  }
+
+  // Kies willekeurig GAME_SIZE vogels
+  birdList = shuffle(activeBirds).slice(0, Math.min(GAME_SIZE, activeBirds.length));
+  remainingPairs = birdList.length;
+
+  stopAudio();
+  document.getElementById("pause-overlay").classList.add("hidden");
+  showScreen("game-screen");
+  renderScores();
+  buildGrid();
+}
+
+/* ============================================================
+   GRID
+   ============================================================ */
+function buildGrid() {
+  updatePairsLeft();
+  const grid = document.getElementById("grid");
+  grid.innerHTML = "";
+
+  const cardData = [];
+  birdList.forEach(bird => {
+    // Willekeurig geluid kiezen
+    const sound = bird.sounds[Math.floor(Math.random() * bird.sounds.length)];
+    // Willekeurig plaatje kiezen (ondersteunt zowel bird.image als bird.images[])
+    const imgPool = bird.images || [bird.image];
+    const image   = imgPool[Math.floor(Math.random() * imgPool.length)];
+    cardData.push({ type: "image", bird, image });
+    cardData.push({ type: "sound", bird, sound });
+  });
+
+  shuffle(cardData).forEach(cd => grid.appendChild(makeCard(cd)));
+}
+
+/* ── Geluidsicoon: mini tropische vogel met nootjes ──────────────────── */
+const SOUND_ICON_SVG = `<svg viewBox="0 0 120 75" width="100%" height="80%" style="max-width:130px">
+<style>
+  @keyframes vbob{0%,100%{transform:translateY(0)}50%{transform:translateY(-2px)}}
+  @keyframes fnote{0%{opacity:0;transform:translateY(0) scale(.7)}30%{opacity:.6}100%{opacity:0;transform:translateY(-16px) scale(1)}}
+  .vb{animation:vbob 1.5s ease-in-out infinite}
+  .nt{font-family:serif}
+  .nt1{animation:fnote 1.8s ease-in-out .1s infinite}
+  .nt2{animation:fnote 1.8s ease-in-out .6s infinite}
+  .nt3{animation:fnote 1.8s ease-in-out 1.1s infinite}
+</style>
+<g transform="translate(40,42)" class="vb" style="transform-origin:0 0">
+  <!-- staart -->
+  <path d="M-3,8 Q-10,16 -14,22" stroke="#f44336" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <path d="M0,9 Q0,18 2,22" stroke="#4caf50" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+  <path d="M3,8 Q10,16 14,22" stroke="#2196f3" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <!-- vleugels -->
+  <path d="M-5,-2 Q-16,-10 -18,-2 Q-12,5 -5,4 Z" fill="#4caf50" fill-opacity=".7"/>
+  <path d="M5,-2 Q16,-10 18,-2 Q12,5 5,4 Z" fill="#ff9800" fill-opacity=".7"/>
+  <!-- lichaam -->
+  <ellipse cx="0" cy="2" rx="7" ry="8" fill="#66bb6a"/>
+  <ellipse cx="0" cy="4" rx="4.5" ry="5" fill="#a5d6a7" fill-opacity=".6"/>
+  <!-- kop -->
+  <circle cx="0" cy="-8" r="6.5" fill="#66bb6a"/>
+  <ellipse cx="-2.5" cy="-9.5" rx="2.2" ry="2.6" fill="white"/>
+  <ellipse cx="2.5" cy="-9.5" rx="2.2" ry="2.6" fill="white"/>
+  <circle cx="-1.8" cy="-9" r="1.5" fill="#1b5e20"/>
+  <circle cx="3.2" cy="-9" r="1.5" fill="#1b5e20"/>
+  <circle cx="-1.2" cy="-10" r=".6" fill="white"/>
+  <circle cx="3.8" cy="-10" r=".6" fill="white"/>
+  <!-- snavel -->
+  <path d="M-1.5,-5 Q0,-3 1.5,-5 Z" fill="#ff7043"/>
+  <!-- kuif -->
+  <line x1="-2.5" y1="-14" x2="-4" y2="-19" stroke="#f44336" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="0" y1="-14.5" x2="0" y2="-20" stroke="#ff9800" stroke-width="1.5" stroke-linecap="round"/>
+  <line x1="2.5" y1="-14" x2="4" y2="-19" stroke="#2196f3" stroke-width="1.5" stroke-linecap="round"/>
+</g>
+<!-- nootjes -->
+<g font-family="serif">
+  <text x="66" y="30" font-size="14" fill="#f44336" fill-opacity=".55" class="nt nt1">♪</text>
+  <text x="78" y="20" font-size="12" fill="#ff9800" fill-opacity=".55" class="nt nt2">♫</text>
+  <text x="62" y="16" font-size="10" fill="#4caf50" fill-opacity=".55" class="nt nt3">♩</text>
+</g>
+</svg>`;
+
+/* ── Kaartrug: Tropische vrolijkerd (landscape) ──────────────────────── */
+const CARD_BACK_SVG = `<svg viewBox="0 0 240 160" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+<defs>
+  <linearGradient id="cbg" x1="0%" y1="0%" x2="100%" y2="100%">
+    <stop offset="0%" stop-color="#4fc3f7"/><stop offset="100%" stop-color="#0288d1"/>
+  </linearGradient>
+  <filter id="csft"><feGaussianBlur stdDeviation="2.5"/></filter>
+</defs>
+<rect width="240" height="160" fill="url(#cbg)"/>
+<!-- wolken -->
+<ellipse cx="40" cy="28" rx="28" ry="10" fill="white" fill-opacity=".35"/>
+<ellipse cx="195" cy="22" rx="32" ry="11" fill="white" fill-opacity=".3"/>
+<ellipse cx="110" cy="16" rx="20" ry="8" fill="white" fill-opacity=".25"/>
+<!-- zon -->
+<circle cx="210" cy="30" r="18" fill="#ffd54f" fill-opacity=".5"/>
+<circle cx="210" cy="30" r="12" fill="#ffee58" fill-opacity=".6"/>
+<!-- schaduw -->
+<ellipse cx="120" cy="140" rx="38" ry="7" fill="#0277bd" fill-opacity=".2" filter="url(#csft)"/>
+<g transform="translate(120,74)">
+  <!-- staart -->
+  <path d="M-6,18 Q-30,45 -40,65" stroke="#f44336" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <path d="M-2,20 Q-12,50 -15,68" stroke="#ff9800" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+  <path d="M2,20 Q5,52 5,68" stroke="#4caf50" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+  <path d="M6,18 Q20,48 28,62" stroke="#2196f3" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <circle cx="-40" cy="66" r="4" fill="#f44336"/>
+  <circle cx="-15" cy="70" r="3.5" fill="#ff9800"/>
+  <circle cx="5" cy="70" r="3.5" fill="#4caf50"/>
+  <circle cx="28" cy="64" r="4" fill="#2196f3"/>
+  <!-- vleugels -->
+  <path d="M-14,-5 Q-50,-28 -55,-5 Q-42,15 -14,12 Z" fill="#4caf50" fill-opacity=".8"/>
+  <path d="M14,-5 Q50,-28 55,-5 Q42,15 14,12 Z" fill="#ff9800" fill-opacity=".8"/>
+  <path d="M-14,0 Q-38,-15 -42,-2" stroke="#81c784" stroke-width="1.5" fill="none" stroke-opacity=".6"/>
+  <path d="M14,0 Q38,-15 42,-2" stroke="#ffcc80" stroke-width="1.5" fill="none" stroke-opacity=".6"/>
+  <!-- lichaam -->
+  <ellipse cx="0" cy="5" rx="16" ry="20" fill="#66bb6a"/>
+  <ellipse cx="0" cy="10" rx="11" ry="13" fill="#a5d6a7" fill-opacity=".7"/>
+  <!-- kop -->
+  <circle cx="0" cy="-20" r="15" fill="#66bb6a"/>
+  <ellipse cx="-9" cy="-14" rx="4.5" ry="3" fill="#ffab91" fill-opacity=".5"/>
+  <ellipse cx="9" cy="-14" rx="4.5" ry="3" fill="#ffab91" fill-opacity=".5"/>
+  <!-- ogen -->
+  <ellipse cx="-6" cy="-22" rx="5.5" ry="6" fill="white"/>
+  <ellipse cx="6" cy="-22" rx="5.5" ry="6" fill="white"/>
+  <circle cx="-4.5" cy="-21" r="3.5" fill="#1b5e20"/>
+  <circle cx="7.5" cy="-21" r="3.5" fill="#1b5e20"/>
+  <circle cx="-3.5" cy="-22.5" r="1.5" fill="white"/>
+  <circle cx="8.5" cy="-22.5" r="1.5" fill="white"/>
+  <!-- snavel -->
+  <path d="M-4,-13 Q-1,-6 2,-13 Q0,-10 -2,-10 Z" fill="#ff7043"/>
+  <path d="M-3,-12.5 Q0,-9 3,-12.5" stroke="#e64a19" stroke-width=".6" fill="none"/>
+  <!-- kuif -->
+  <line x1="-6" y1="-34" x2="-10" y2="-48" stroke="#f44336" stroke-width="3" stroke-linecap="round"/>
+  <line x1="-2" y1="-34" x2="-3" y2="-50" stroke="#ff9800" stroke-width="3" stroke-linecap="round"/>
+  <line x1="2" y1="-34" x2="3" y2="-50" stroke="#4caf50" stroke-width="3" stroke-linecap="round"/>
+  <line x1="6" y1="-34" x2="10" y2="-48" stroke="#2196f3" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="-10" cy="-49" r="3" fill="#f44336"/>
+  <circle cx="-3" cy="-51" r="3" fill="#ff9800"/>
+  <circle cx="3" cy="-51" r="3" fill="#4caf50"/>
+  <circle cx="10" cy="-49" r="3" fill="#2196f3"/>
+  <!-- pootjes -->
+  <line x1="-6" y1="23" x2="-8" y2="34" stroke="#ff7043" stroke-width="2.5" stroke-linecap="round"/>
+  <line x1="6" y1="23" x2="8" y2="34" stroke="#ff7043" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M-13,34 Q-8,36 -3,34" stroke="#ff7043" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <path d="M3,34 Q8,36 13,34" stroke="#ff7043" stroke-width="2" fill="none" stroke-linecap="round"/>
+</g>
+<text x="120" y="155" text-anchor="middle" font-size="9"
+  font-family="'Comic Sans MS',cursive,sans-serif" fill="white" fill-opacity=".5"
+  letter-spacing="3">VOGEL MEMORY</text>
+</svg>`;
+
+function makeCard(cd) {
+  const el = document.createElement("div");
+  el.className        = "card";
+  el.dataset.birdId   = cd.bird.id;
+  el.dataset.type     = cd.type;
+  if (cd.sound) {
+    el.dataset.sound = cd.sound;
+    if (cd.bird.soundStarts) el.dataset.soundStarts = JSON.stringify(cd.bird.soundStarts);
+  }
+
+  const back  = document.createElement("div");
+  back.className  = "card-face card-back";
+  back.innerHTML  = CARD_BACK_SVG;
+
+  const front = document.createElement("div");
+  front.className = `card-face card-front ${cd.type}-card`;
+  front.style.backgroundColor = cd.bird.color;
+
+  if (cd.type === "image") {
+    const img = document.createElement("img");
+    img.src       = WM + encodeURIComponent(cd.image || cd.bird.image);
+    img.alt       = cd.bird.name;
+    img.className = "loading";
+    img.addEventListener("load",  () => { img.className = "loaded"; });
+    img.addEventListener("error", () => { img.replaceWith(makeFallback()); });
+    front.appendChild(img);
+    front.appendChild(makeLabel(cd.bird.name));
+  } else {
+    const spk = document.createElement("div");
+    spk.className   = "speaker";
+    spk.innerHTML = SOUND_ICON_SVG;
+    front.appendChild(spk);
+    front.appendChild(makeLabel(cd.bird.name));
+  }
+
+  const inner = document.createElement("div");
+  inner.className = "card-inner";
+  inner.appendChild(back);
+  inner.appendChild(front);
+  el.appendChild(inner);
+
+  el.addEventListener("click", () => onCardClick(el));
+  return el;
+}
+
+function makeLabel(text) {
+  const d = document.createElement("div");
+  d.className   = "card-label";
+  d.textContent = text;
+  return d;
+}
+
+function makeFallback() {
+  const d = document.createElement("div");
+  d.className   = "no-img";
+  d.textContent = "🐦";
+  return d;
+}
+
+/* ============================================================
+   CARD CLICK
+   ============================================================ */
+function onCardClick(el) {
+  if (locked || paused || el.classList.contains("gone")) return;
+
+  // Re-click flipped sound card → replay audio
+  if (el.classList.contains("flipped") && el.dataset.type === "sound") {
+    playSound(el.dataset.sound, el, el.dataset.soundStarts ? JSON.parse(el.dataset.soundStarts) : null);
+    return;
+  }
+
+  if (el.classList.contains("flipped") || el.classList.contains("matched")) return;
+  if (flipped.length >= 2) return;
+
+  el.classList.add("flipped");
+  if (el.dataset.type === "sound") playSound(el.dataset.sound, el, el.dataset.soundStarts ? JSON.parse(el.dataset.soundStarts) : null);
+  flipped.push(el);
+
+  if (flipped.length === 2) {
+    locked = true;
+    // 420ms flip animation + 1000ms visible = 1420ms; use 1500 for comfort
+    setTimeout(resolveFlipped, 3420); // 420ms flip-animatie + 3s kijktijd
+  }
+}
+
+function resolveFlipped() {
+  const [a, b] = flipped;
+  flipped = [];
+
+  if (a.dataset.birdId === b.dataset.birdId) {
+    // ── MATCH ──
+    players[currentIdx].score++;
+    remainingPairs--;
+    renderScores();
+    updatePairsLeft();
+
+    [a, b].forEach(el => {
+      el.classList.add("matched", "disappearing");
+      el.addEventListener("animationend", () => {
+        el.classList.add("gone");
+        el.classList.remove("disappearing");
+      }, { once: true });
+    });
+
+    locked = false;
+    if (remainingPairs === 0) setTimeout(showWin, 700);
+    else advancePlayer();
+
+  } else {
+    // ── NO MATCH ──
+    [a, b].forEach(el => {
+      el.classList.remove("flipped");
+      if (el.dataset.type === "sound")
+        el.querySelector(".card-face.sound-card")?.classList.remove("playing");
+    });
+    advancePlayer();
+    locked = false;
+  }
+}
+
+/* ============================================================
+   PLAYERS
+   ============================================================ */
+function advancePlayer() {
+  if (players.length > 1) {
+    currentIdx = (currentIdx + 1) % players.length;
+    renderScores();
+  }
+}
+
+function renderScores() {
+  const container = document.getElementById("scores");
+  container.innerHTML = "";
+  players.forEach((p, i) => {
+    const div = document.createElement("div");
+    div.className = "player-score" + (i === currentIdx ? " active" : "");
+    div.innerHTML =
+      `<span class="p-name">${p.name}</span>` +
+      `<span class="p-score">${p.score}</span>`;
+    container.appendChild(div);
+  });
+}
+
+function updatePairsLeft() {
+  document.getElementById("pairs-left").textContent =
+    remainingPairs === 1 ? "1 paar over" : `${remainingPairs} paren over`;
+}
+
+/* ============================================================
+   PAUSE
+   ============================================================ */
+function openPause() {
+  paused = true;
+  const who = players[currentIdx]?.name || "";
+  document.getElementById("pause-info").textContent =
+    players.length > 1 ? `${who} is aan de beurt` : "";
+  document.getElementById("pause-overlay").classList.remove("hidden");
+}
+
+function closePause() {
+  paused = false;
+  document.getElementById("pause-overlay").classList.add("hidden");
+}
+
+/* ============================================================
+   CURATOR STATE — lees localStorage van de curator
+   ============================================================ */
+function loadCuratorState() {
+  const key = selectedCountry.catalogKey
+    ? `vogelMemoryCatalog_${selectedCountry.catalogKey}`
+    : "vogelMemoryCatalog_nl";
+  try { return JSON.parse(localStorage.getItem(key)); } catch { return null; }
+}
+
+/* ============================================================
+   AUDIO — Web Audio API
+   • Fade-in  : 0.1 s via GainNode ramp
+   • Normalisatie : RMS-analyse van het afspeelgedeelte
+   • Fade-out : 1 s na 3 s via GainNode ramp
+   ============================================================ */
+
+// Fallback starttijden (overschreven door curator-instellingen)
+const AUDIO_STARTS = {
+  "Turdus_philomelos.ogg":            8,
+  "Turdus_philomelos_816.ogg":        5,
+  "XN_Luscinia_megarhynchos_017.ogg": 4,
+  "Carduelis_chloris.ogg":            1,
+};
+
+const TARGET_RMS  = 0.12;  // streefniveau (0–1)
+const MAX_GAIN    = 10;    // maximale versterking
+const FADE_IN_S   = 0.1;  // fade-in duur (seconden)
+const FADE_OUT_S  = 1.0;  // fade-out duur
+const PLAY_S      = 3.0;  // speelduur vóór fade-out
+
+function rmsGain(buffer, startAt) {
+  const sr    = buffer.sampleRate;
+  const start = Math.floor(startAt * sr);
+  const end   = Math.min(start + Math.floor((PLAY_S + FADE_OUT_S) * sr), buffer.length);
+  let sumSq = 0, n = 0;
+  for (let ch = 0; ch < buffer.numberOfChannels; ch++) {
+    const data = buffer.getChannelData(ch);
+    for (let i = start; i < end; i++) { sumSq += data[i] ** 2; n++; }
+  }
+  const rms = n > 0 ? Math.sqrt(sumSq / n) : 0;
+  return rms > 0 ? Math.min(TARGET_RMS / rms, MAX_GAIN) : 1;
+}
+
+async function playSound(filename, cardEl, birdSoundStarts) {
+  stopAudio();
+
+  const front = cardEl?.querySelector(".card-face.sound-card");
+  if (front) { front.classList.add("playing"); activeFront = front; }
+
+  const startAt = (birdSoundStarts?.[filename] != null)
+    ? birdSoundStarts[filename]
+    : (AUDIO_STARTS[filename] || 0);
+
+  const url = WM + encodeURIComponent(filename);
+  const ctx = getAudioCtx();
+  await ctx.resume();
+
+  try {
+    // Laad & cache gedecodeerde buffer
+    if (!audioCache[url]) {
+      const resp = await fetch(url, { mode: "cors" });
+      const ab   = await resp.arrayBuffer();
+      audioCache[url] = await ctx.decodeAudioData(ab);
+    }
+    const buffer = audioCache[url];
+    const gain   = rmsGain(buffer, startAt);
+
+    const source   = ctx.createBufferSource();
+    source.buffer  = buffer;
+
+    const fadeNode = ctx.createGain();
+    fadeNode.gain.setValueAtTime(0, ctx.currentTime);
+    fadeNode.gain.linearRampToValueAtTime(gain, ctx.currentTime + FADE_IN_S);
+    source.connect(fadeNode);
+    fadeNode.connect(ctx.destination);
+    source.start(0, startAt);
+
+    activeSource   = source;
+    activeFadeGain = fadeNode;
+
+    // Fade-out na PLAY_S seconden
+    fadeTimerId = setTimeout(() => {
+      const now = ctx.currentTime;
+      fadeNode.gain.cancelScheduledValues(now);
+      fadeNode.gain.setValueAtTime(fadeNode.gain.value, now);
+      fadeNode.gain.linearRampToValueAtTime(0, now + FADE_OUT_S);
+      setTimeout(() => {
+        try { source.stop(); } catch (_) {}
+        if (front) { front.classList.remove("playing"); activeFront = null; }
+      }, (FADE_OUT_S + 0.1) * 1000);
+    }, PLAY_S * 1000);
+
+  } catch (err) {
+    // Fallback: plain Audio als CORS of decode mislukt
+    console.warn("Web Audio fallback:", err.message);
+    const audio = new Audio(url);
+    audio.volume = 0;
+    if (startAt > 0) audio.addEventListener("canplay",
+      () => { audio.currentTime = startAt; }, { once: true });
+    audio.play().catch(() => {});
+    // Fade-in
+    let s = 0;
+    const fi = setInterval(() => { audio.volume = Math.min(1, ++s / 10); if (s >= 10) clearInterval(fi); }, 10);
+    audio.addEventListener("play", () => {
+      fadeTimerId = setTimeout(() => {
+        let step = 0, vol = audio.volume;
+        const fo = setInterval(() => {
+          audio.volume = Math.max(0, vol * (1 - ++step / 30));
+          if (step >= 30) { clearInterval(fo); audio.pause(); front?.classList.remove("playing"); activeFront = null; }
+        }, 33);
+      }, PLAY_S * 1000);
+    }, { once: true });
+    activeAudio = audio;
+  }
+}
+
+function stopAudio() {
+  if (fadeTimerId) { clearTimeout(fadeTimerId); fadeTimerId = null; }
+  if (activeSource) {
+    try {
+      activeFadeGain?.gain.cancelScheduledValues(audioCtx?.currentTime ?? 0);
+      activeFadeGain?.gain.setValueAtTime(0, audioCtx?.currentTime ?? 0);
+      activeSource.stop();
+    } catch (_) {}
+    activeSource = null; activeFadeGain = null;
+  }
+  if (activeAudio) { activeAudio.pause(); activeAudio = null; }
+  if (activeFront) { activeFront.classList.remove("playing"); activeFront = null; }
+}
+
+/* ============================================================
+   WIN SCREEN
+   ============================================================ */
+function showWin() {
+  stopAudio();
+  const sorted   = [...players].sort((a, b) => b.score - a.score);
+  const maxScore = sorted[0].score;
+  const tbody    = document.getElementById("result-body");
+  tbody.innerHTML = "";
+  sorted.forEach((p, i) => {
+    const tr = document.createElement("tr");
+    if (i === 0 && players.length > 1) tr.className = "winner";
+    tr.innerHTML =
+      `<td>${i === 0 && players.length > 1 ? "🏆 " : ""}${p.name}</td>` +
+      `<td>${p.score}</td>`;
+    tbody.appendChild(tr);
+  });
+  showScreen("win-screen");
+}
+
+/* ============================================================
+   NAVIGATION
+   ============================================================ */
+function showScreen(id) {
+  ["setup-screen", "game-screen", "win-screen"].forEach(s =>
+    document.getElementById(s).classList.toggle("hidden", s !== id)
+  );
+}
+
+function goToSetup() {
+  stopAudio();
+  closePause();
+  showScreen("setup-screen");
+}
+
+/* ============================================================
+   UTILS
+   ============================================================ */
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/* ── boot ── */
+initSetup();
+</script>
+</body>
+</html>

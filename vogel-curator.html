@@ -1,0 +1,1296 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vogel Memory — Curator</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', sans-serif; background: #f0f4f0; color: #333; }
+
+    header { background: #2e7d32; color: white; padding: 16px 24px; position: sticky; top: 0; z-index: 10; display: flex; align-items: center; gap: 16px; }
+    header h1 { font-size: 1.25em; flex: 1; }
+    header .status { font-size: 0.82em; opacity: .85; }
+
+    .license-note {
+      background: #fff8e1; border-left: 4px solid #ffc107;
+      padding: 11px 18px; margin: 14px 24px; border-radius: 4px;
+      font-size: 0.84em; line-height: 1.5;
+    }
+
+    /* ── bird card ── */
+    .bird-section {
+      background: white; margin: 12px 24px;
+      border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,.08);
+      overflow: hidden; transition: opacity .2s;
+    }
+    .bird-section.disabled { opacity: .45; }
+
+    .bird-header {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 16px; cursor: pointer;
+      background: #e8f5e9; user-select: none;
+    }
+    .bird-section.disabled .bird-header { background: #eee; }
+
+    .bird-header h2 { font-size: 1.05em; color: #1b5e20; flex: 1; }
+    .bird-section.disabled .bird-header h2 { color: #888; }
+    .bird-header em  { font-size: 0.8em; color: #666; }
+
+    .toggle-bird {
+      padding: 5px 13px; border-radius: 14px; border: none;
+      font-size: 0.78em; font-weight: 700; cursor: pointer;
+      white-space: nowrap; transition: all .15s;
+    }
+    .toggle-bird.on  { background: #2e7d32; color: white; }
+    .toggle-bird.off { background: #ccc;    color: #555; }
+
+    .chevron { font-size: 0.9em; color: #888; transition: transform .2s; }
+    .bird-section.collapsed .chevron { transform: rotate(-90deg); }
+
+    .bird-body { }
+    .bird-section.collapsed .bird-body { display: none; }
+
+    .subsection { padding: 12px 16px; border-top: 1px solid #f0f0f0; }
+    .subsection h3 { font-size: 0.75em; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .07em; color: #888; margin-bottom: 9px; }
+
+    /* ── images ── */
+    .img-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .img-card {
+      border: 2px solid #e0e0e0; border-radius: 8px; overflow: hidden;
+      width: 148px; cursor: pointer; transition: border-color .15s;
+      position: relative;
+    }
+    .img-card.selected { border-color: #2e7d32; background: #f1f8e9; }
+    .img-card img {
+      width: 100%; height: 100px; object-fit: cover;
+      display: block; background: #eee;
+    }
+    .img-card .img-meta { padding: 5px 7px; font-size: 0.72em; line-height: 1.3; }
+    .img-card .img-name { font-weight: 600; color: #333; }
+    .img-card .img-file { color: #aaa; word-break: break-all; }
+    .img-card .img-num {
+      position: absolute; top: 5px; left: 5px;
+      background: #2e7d32; color: white; font-size: 0.7em;
+      font-weight: 700; padding: 2px 5px; border-radius: 9px; display: none;
+    }
+    .img-card.selected .img-num { display: block; }
+
+    /* ── sounds ── */
+    .sound-list { display: flex; flex-direction: column; gap: 7px; }
+    .sound-row {
+      display: flex; align-items: center; gap: 8px; padding: 7px 9px;
+      border: 1.5px solid #e0e0e0; border-radius: 7px; background: #fafafa;
+    }
+    .sound-row.selected { border-color: #2e7d32; background: #f1f8e9; }
+
+    .play-btn {
+      width: 32px; height: 32px; border-radius: 50%; border: none;
+      background: #2e7d32; color: white; font-size: 0.82em; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .play-btn.playing { background: #c62828; }
+
+    .sound-info { flex: 1; min-width: 0; }
+    .sound-label { font-size: 0.85em; font-weight: 600; }
+    .sound-file  { font-size: 0.7em; color: #aaa; word-break: break-all; }
+
+    .sound-start { display: flex; align-items: center; gap: 3px; flex-shrink: 0; }
+    .sound-start label { font-size: 0.72em; color: #999; }
+    .sound-start input {
+      width: 52px; padding: 3px 5px; border: 1px solid #ddd;
+      border-radius: 4px; font-size: 0.78em; text-align: right;
+    }
+
+    .use-btn {
+      padding: 4px 9px; border-radius: 5px; font-size: 0.75em;
+      border: 1.5px solid #ccc; background: white; cursor: pointer;
+      white-space: nowrap; flex-shrink: 0; transition: all .15s;
+    }
+    .use-btn.on { border-color: #2e7d32; background: #2e7d32; color: white; }
+
+    .warn { font-size: .78em; color: #e65100; margin-top: 6px; }
+
+    /* ── tabs ── */
+    .tab-bar {
+      display: flex; gap: 4px; padding: 0 24px;
+      background: white; border-bottom: 2px solid #e0e0e0;
+      position: sticky; top: 52px; z-index: 9;
+    }
+    .tab-btn {
+      padding: 10px 20px; border: none; background: transparent;
+      font-size: 0.92em; font-weight: 600; cursor: pointer; color: #888;
+      border-bottom: 3px solid transparent; margin-bottom: -2px;
+      transition: all .18s;
+    }
+    .tab-btn.active { color: #2e7d32; border-bottom-color: #2e7d32; }
+    .tab-btn:hover:not(.active) { color: #555; background: #f5f5f5; }
+
+    /* ── export ── */
+    #export-section {
+      margin: 20px 24px; padding: 18px; background: white;
+      border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,.08);
+    }
+    #export-section h2 { margin-bottom: 8px; color: #1b5e20; font-size: 1.05em; }
+    #export-btn {
+      padding: 9px 20px; background: #2e7d32; color: white;
+      border: none; border-radius: 7px; cursor: pointer; font-size: 0.92em;
+    }
+    #export-output {
+      margin-top: 12px; background: #f5f5f5; padding: 12px;
+      border-radius: 5px; font-size: 0.75em; white-space: pre-wrap;
+      word-break: break-all; max-height: 380px; overflow-y: auto; display: none;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🐦 Vogel Memory — Curator</h1>
+  <span class="status" id="status-bar">– vogels actief</span>
+</header>
+
+<div class="tab-bar">
+  <button class="tab-btn active" onclick="switchTab('nl', this)">🇳🇱 Nederland</button>
+  <button class="tab-btn"        onclick="switchTab('es', this)">🇪🇸 España</button>
+</div>
+
+<div class="license-note">
+  ⚖️ <strong>Licenties:</strong> Controleer elk bestand via
+  <code>commons.wikimedia.org/wiki/File:BESTANDSNAAM</code>.
+  Gebruik <strong>CC0 of CC-BY</strong> voor commercieel gebruik; vermijd <strong>CC-BY-SA</strong>.
+</div>
+
+<div id="birds-container"></div>
+
+<div id="export-section">
+  <h2>📋 Exporteer selectie naar Claude</h2>
+  <p style="font-size:.82em;color:#666;margin-bottom:10px">Keuzes worden automatisch opgeslagen. Gebruik de export om wijzigingen door te sturen.</p>
+  <button id="export-btn" onclick="exportSelection()">Genereer export</button>
+  <pre id="export-output"></pre>
+</div>
+
+<script>
+const WM_AUDIO   = "https://commons.wikimedia.org/wiki/Special:FilePath/";
+const WM_API     = "https://commons.wikimedia.org/w/api.php";
+const THUMB_W    = 300;
+const GAME_BIRDS = 15;
+const LS_KEYS    = { nl: "vogelMemoryCatalog_nl", es: "vogelMemoryCatalog_es" };
+
+let activeCountry = "nl"; // actief tabblad
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CATALOGUS — 25 Nederlandse vogels
+// ═══════════════════════════════════════════════════════════════════════════
+const CATALOGS = {};
+
+// ══════════════════════════════════════════════════════════════════════
+// 🇳🇱 NEDERLAND
+// ══════════════════════════════════════════════════════════════════════
+CATALOGS.nl = [
+  {
+    id:"merel", name:"Merel", scientific:"Turdus merula",
+    images:[
+      {file:"Common_Blackbird.jpg",         label:"Mannetje, zittend"},
+      {file:"Turdus_merula_3.JPG",          label:"Mannetje, staand"},
+      {file:"Male_blackbird.jpg",           label:"Mannetje, close-up"},
+      {file:"Blackbird_in_sunlight.JPG",    label:"Mannetje in zonlicht"},
+    ],
+    sounds:[
+      {file:"Turdus_merula_2.ogg",                                       label:"Zang – ochtend",            duration:25},
+      {file:"Common_Blackbird_(Turdus_merula)_(W1CDR0001525_BD22).ogg",  label:"Zang – British Library",    duration:55},
+      {file:"Turdus_merula_-_Common_Blackbird_XC541788.mp3",             label:"Zang – XC541788 (kort)",    duration:10},
+      {file:"TurdusMerulaCallEvening.ogg",                               label:"Avondroep",                 duration:18},
+    ]
+  },
+  {
+    id:"koolmees", name:"Koolmees", scientific:"Parus major",
+    images:[
+      {file:"Parus_major_Luc_Viatour.jpg",       label:"Portret, Luc Viatour"},
+      {file:"Great_tit_side-on.jpg",             label:"Zijaanzicht, Lancashire"},
+      {file:"Parus_major_poised.jpg",            label:"Alert, Lancashire"},
+      {file:"Mesange_charbonniere-s_haye.jpg",   label:"Zittend, Frankrijk"},
+    ],
+    sounds:[
+      {file:"Parus_major_song.ogg",                            label:"Zang",                    duration:19},
+      {file:"Great_Tit_(Parus_major)_(W1CDR0001393_BD1).ogg", label:"Zang – British Library",  duration:57},
+      {file:"Parus_major_-_Great_Tit_XC129643.ogg",           label:"Zang – XC129643",         duration:37},
+      {file:"Parus_major_-_Great_Tit_XC172577.mp3",           label:"Zang – XC172577",         duration:33},
+    ]
+  },
+  {
+    id:"roodborst", name:"Roodborst", scientific:"Erithacus rubecula",
+    images:[
+      {file:"Erithacus_rubecula_with_cocked_head.jpg",                           label:"Hoofd schuin, featured"},
+      {file:"Rotkehlchen_bird.jpg",                                              label:"Zittend, Duitsland"},
+      {file:"European_Robin_Erithacus_rubecula.jpg",                            label:"Staand, Dorset"},
+      {file:"Erithacus_rubecula_with_earthworm,_Roodborstje_met_regenworm.jpg", label:"Met regenworm"},
+    ],
+    sounds:[
+      {file:"XC27161_-_Roodborst_-_Erithacus_rubecula.ogg",              label:"Zang – XC27161 NL",        duration:86},
+      {file:"European_Robin_(Erithacus_rubecula)_(W1CDR0001525_BD17).ogg", label:"Zang – British Library",   duration:47},
+      {file:"Erithacus_rubecula_-_European_Robin_-_XC114615.ogg",         label:"Zang – XC114615",          duration:38},
+      {file:"Erithacus_rubecula.ogg",                                     label:"Roep – kort",              duration:16},
+    ]
+  },
+  {
+    id:"kauw", name:"Kauw", scientific:"Coloeus monedula",
+    images:[
+      {file:"Western_Jackdaw.jpg",                                label:"Portret, staand"},
+      {file:"Jackdaw_arp_750pix.jpg",                            label:"Close-up"},
+      {file:"Jackdaw.northdevon.arp-sh.750pix.jpg",              label:"Devon, VK"},
+      {file:"Coloeus_monedula_-Lynmouth,_Devon,_England-8a.jpg", label:"Lynmouth, Devon"},
+    ],
+    sounds:[
+      {file:"Corvus_monedula_calls.ogg",                  label:"Roep – Estland",          duration:13},
+      {file:"European Jackdaw's croaking.ogg",              label:"Krassen",                 duration:17},
+      {file:"Jackdaws (Coloeus monedula) calling - Bærum, Norway 2021-04-03 (01).mp3",      label:"Roep groep – Noorwegen", duration:10},
+    ]
+  },
+  {
+    id:"spreeuw", name:"Spreeuw", scientific:"Sturnus vulgaris",
+    images:[
+      {file:"Common_Starling_(Sturnus_vulgaris)_Leek_Wootton.jpg", label:"Zittend, Warwickshire"},
+      {file:"Sturnus_vulgaris_eating_a_worm.jpg",                  label:"Met worm, Toulouse"},
+      {file:"Sturnus_vulgaris_-hand_feeding_-London-8.jpg",        label:"Winterkleed, Londen"},
+      {file:"Colourful_starling.jpeg",                             label:"Kleurrijk, N-Ierland"},
+    ],
+    sounds:[
+      {file:"Common_Starling_(Sturnus_vulgaris)_(W1CDR0001431_BD8).ogg", label:"Zang – British Library", duration:40},
+      {file:"Sturnus_vulgaris_-_Common_Starling_XC474427.mp3",           label:"Zang – XC474427",        duration:29},
+      {file:"Sturnus_vulgaris_-_Common_Starling_XC483803.mp3",           label:"Zang – XC483803",        duration:35},
+      {file:"Sturnus_vulgaris.ogg",                                      label:"Zang – algemeen",        duration:25},
+    ]
+  },
+  {
+    id:"huismus", name:"Huismus", scientific:"Passer domesticus",
+    images:[
+      {file:"House_Sparrow_Male_(Passer_Domesticus).jpg", label:"Mannetje, staand"},
+      {file:"Passer_domesticus_-Germany-8.jpg",           label:"Mannetje, Duitsland"},
+      {file:"Male_House_Sparrow.jpg",                     label:"Mannetje, portret"},
+      {file:"Passer-domesticus-001.jpg",                  label:"Mannetje, Toronto"},
+    ],
+    sounds:[
+      {file:"House_Sparrows_(Passer_domesticus)_(W1CDR0001537_BD13).ogg", label:"Zang – British Library",  duration:80},
+      {file:"Passer_domesticus_-_House_Sparrow_XC124181.ogg",             label:"Zang – XC124181",         duration:43},
+      {file:"House_Sparrow.ogg",                                          label:"Roep – algemeen",         duration:17},
+      {file:"Passer_domesticus_-_House_Sparrow_XC86749.mp3",              label:"Zang – XC86749 (kort)",   duration:11},
+    ]
+  },
+  {
+    id:"vink", name:"Vink", scientific:"Fringilla coelebs",
+    images:[
+      {file:"2017.03.25.-01-Kaefertaler_Wald-Mannheim--Buchfink-Maennchen.jpg", label:"Mannetje, Mannheim"},
+      {file:"Fringilla_coelebs_chaffinch_male_edit2.jpg",                       label:"Mannetje, bewerkt"},
+      {file:"Chaffinch_(male).jpg",                                             label:"Mannetje, algemeen"},
+      {file:"Fringilla_coelebs_in_Thuringia_Germany.jpg",                       label:"Mannetje, Thüringen"},
+    ],
+    sounds:[
+      {file:"Chaffinch_(Fringilla_coelebs)_(W1CDR0001527_BD14).ogg", label:"Zang – British Library", duration:74},
+      {file:"XC176182_-_Vink_-_Fringilla_coelebs.ogg",              label:"Zang – XC176182 NL",     duration:38},
+      {file:"Fringilla_coelebs.ogg",                                label:"Zang – algemeen",        duration:25},
+      {file:"Fringilla_coelebs_-_Common_Chaffinch_XC489277.mp3",   label:"Zang – XC489277",        duration:58},
+    ]
+  },
+  {
+    id:"houtduif", name:"Houtduif", scientific:"Columba palumbus",
+    images:[
+      {file:"Common_Wood_Pigeon_(Columba_palumbus).JPG",    label:"Zittend, staand"},
+      {file:"Wood_pidgeon_Columba_palumbus.jpg",            label:"West Kirby, Engeland"},
+      {file:"Close-up_picture_of_a_common_wood_pigeon.jpg", label:"Close-up hoofd"},
+      {file:"Columba_palumbus_1_(Marek_Szczepanek).jpg",   label:"Zittend, Szczepanek"},
+    ],
+    sounds:[
+      {file:"Columba_palumbus_birdsong.ogg",                      label:"Koeren – echt",    duration:12},
+      {file:"Ringeltaube_(ruft).ogg",                             label:"Roep – Duitsland", duration:9},
+      {file:"Columba_palumbus_-_Common_Wood_Pigeon_XC108354.mp3", label:"Zang – XC108354",  duration:60},
+    ]
+  },
+  {
+    id:"pimpelmees", name:"Pimpelmees", scientific:"Cyanistes caeruleus",
+    images:[
+      {file:"2015.01.06.-Mannheim_Vogelstang--Blaumeise.jpg", label:"Zittend, Mannheim"},
+      {file:"Blue_tit_three-quarter_close-up_4.jpg",          label:"Driekwart, Lancashire"},
+      {file:"Eurasian_blue_tit_Lancashire_2.jpg",             label:"Zittend, Lancashire"},
+      {file:"Blue_tit_on_feeder.jpg",                         label:"Bij voederplank"},
+    ],
+    sounds:[
+      {file:"Cyanistes_caeruleus_-_Eurasian_Blue_Tit_XC125793.ogg", label:"Zang – XC125793",         duration:70},
+      {file:"Blue_Tit_(Cyanistes_caeruleus)_(W1CDR0001535_BD30).ogg", label:"Zang – British Library", duration:73},
+      {file:"Cyanistes_caeruleus_-_Eurasian_Blue_Tit_XC131316.ogg", label:"Zang – XC131316",         duration:53},
+      {file:"Cyanistes_caeruleus_-_Eurasian_Blue_Tit_XC541324.mp3", label:"Zang – XC541324",         duration:33},
+    ]
+  },
+  {
+    id:"heggenmus", name:"Heggenmus", scientific:"Prunella modularis",
+    images:[
+      {file:"Dunnock.jpg",                       label:"Zittend, algemeen"},
+      {file:"Prunella_modularis02.jpg",          label:"Zittend, foto 2"},
+      {file:"Prunella_modularis01.jpg",          label:"Zittend, foto 1"},
+      {file:"Prunella_modularis_montanella.jpg", label:"Vergelijking subspecies"},
+    ],
+    sounds:[
+      {file:"Dunnock_(Prunella_modularis)_(W1CDR0001422_BD6).ogg", label:"Zang – British Library", duration:86},
+      {file:"Prunella_modularis_(06_03_06).ogg",                   label:"Zang – 2006",            duration:42},
+      {file:"Prunella_modularis_-_Dunnock_XC47349.mp3",            label:"Zang – XC47349",         duration:33},
+      {file:"Prunella_modularis_-_Dunnock_XC546169.mp3",           label:"Zang – XC546169",        duration:63},
+    ]
+  },
+  {
+    id:"tjiftjaf", name:"Tjiftjaf", scientific:"Phylloscopus collybita",
+    images:[
+      {file:"Chiffchaff_-_Phylloscopus_collybita.jpg",   label:"Zittend, algemeen"},
+      {file:"Phylloscopus_collybita.jpg",                label:"Portret"},
+      {file:"Chiffchaff_(Phylloscopus_collybita).jpg",  label:"Zittend"},
+      {file:"Chiffchaff-Phylloscopus_collybita.jpg",    label:"Close-up"},
+    ],
+    sounds:[
+      {file:"Phylloscopus_collybita_-_Common_Chiffchaff_XC125867.ogg",   label:"Tjif-tjaf roep – XC125867", duration:22},
+      {file:"Chiffchaff_(Phylloscopus_collybita)_(W1CDR0001497_BD9).ogg", label:"Zang – British Library",    duration:45},
+      {file:"Phylloscopus_collybita_7029.ogg",                            label:"Zang – algemeen",           duration:38},
+      {file:"Phylloscopus_collybita_-_Common_Chiffchaff_XC125415.ogg",    label:"Zang – XC125415",           duration:37},
+    ]
+  },
+  {
+    id:"winterkoning", name:"Winterkoning", scientific:"Troglodytes troglodytes",
+    images:[
+      {file:"Troglodytes_troglodytes_fumigatus.JPG",          label:"Levend, Japan"},
+      {file:"Zaunkoenig2017.jpg",                            label:"Zittend, Jena"},
+      {file:"Eurasian-Wren-Troglodytes-troglodytes.jpg",     label:"Zittend, algemeen"},
+      {file:"2016.07.19.-23-Westensee_Felde--Zaunkoenig.jpg", label:"Felde, Duitsland"},
+    ],
+    sounds:[
+      {file:"Eurasian_Wren_(Troglodytes_troglodytes)_(W1CDR0001461_BD5).ogg", label:"Zang – British Library", duration:63},
+      {file:"XC27159_-_Winterkoning_-_Troglodytes_troglodytes.ogg",           label:"Zang – XC27159 NL",      duration:73},
+      {file:"Troglodytes_troglodytes_-_Eurasian_Wren_XC125791.ogg",           label:"Zang – XC125791",        duration:23},
+      {file:"Troglodytes_troglodytes_song.ogg",                                label:"Zang – algemeen",        duration:20},
+    ]
+  },
+  {
+    id:"zanglijster", name:"Zanglijster", scientific:"Turdus philomelos",
+    images:[
+      {file:"Song_Thrush_(Turdus_philomelos)_singing_in_tree.jpg", label:"Zingend in boom"},
+      {file:"Song_Thrush_Turdus_philomelos.jpg",                   label:"Quality image"},
+      {file:"Song_Thrush-Mindaugas_Urbonas-3.jpg",                 label:"Zingend, Urbonas"},
+      {file:"Turdus_philomelos2.jpg",                              label:"Staand, algemeen"},
+    ],
+    sounds:[
+      {file:"Turdus_philomelos_-_Song_Thrush_XC321571.mp3",  label:"Zang – XC321571",       duration:38},
+      {file:"Turdus_philomelos_-_Song_Thrush_XC434600.mp3",  label:"Zang – XC434600 (kort)", duration:22},
+      {file:"Turdus_philomelos_in_Deutschland.ogg",          label:"Zang – Duitsland",      duration:52},
+      {file:"Turdus_philomelos_Bytom_Poland.ogg",            label:"Zang – Polen",          duration:35},
+    ]
+  },
+  {
+    id:"groenling", name:"Groenling", scientific:"Chloris chloris",
+    images:[
+      {file:"Greenfinch_(Chloris_chloris)_Zelentarka.jpg",           label:"Mannetje, Zelentarka"},
+      {file:"European_greenfinch_(Chloris_chloris_voousi)_male.jpg", label:"Mannetje, subspecies"},
+      {file:"European_Greenfinch.jpg",                               label:"Mannetje, algemeen"},
+      {file:"Chloris_chloris.jpg",                                   label:"Mannetje, zittend"},
+    ],
+    sounds:[
+      {file:"Carduelis_chloris.ogg", label:"Zang – Rusland", duration:11},
+    ],
+    warn:"Beperkt beschikbaar op Wikimedia Commons. Zoek aanvulling op xeno-canto.org."
+  },
+  {
+    id:"kievit", name:"Kievit", scientific:"Vanellus vanellus",
+    images:[
+      {file:"Vanellus_vanellus_in_flight_3.JPG",                                        label:"In vlucht"},
+      {file:"Vanellus_vanellus_001.JPG",                                                label:"Staand, Japan"},
+      {file:"Vanellus_vanellus_002_eating_Earthworm.JPG",                               label:"Met worm, Japan"},
+      {file:"2018.09.10.-06-Lac_du_Der_Chantecoq-Giffaumont-Champaubert--Kiebitz.jpg", label:"Staand, Frankrijk"},
+    ],
+    sounds:[
+      {file:"Northern_Lapwing_(Vanellus_vanellus)_(W1CDR0001471_BD4).ogg", label:"Roep – British Library", duration:35},
+      {file:"Vanellus_vanellus_-_Northern_Lapwing_XC247886.mp3",           label:"Roep – XC247886",        duration:23},
+      {file:"Vanellus_vanellus_-_Northern_Lapwing_XC436942.mp3",           label:"Roep – XC436942 (kort)", duration:8},
+      {file:"Vanellus_vanellus_-_Northern_Lapwing_XC467004.mp3",           label:"Zang – XC467004",        duration:104},
+    ]
+  },
+  // ── 10 nieuwe vogels ────────────────────────────────────────────────────
+  {
+    id:"ekster", name:"Ekster", scientific:"Pica pica",
+    images:[
+      {file:"Eurasian_magpie_(Pica_pica).jpg",       label:"Zittend, algemeen"},
+      {file:"Pica_pica_perched_on_branch.jpg",       label:"Op tak, Birmingham"},
+      {file:"Commonmagpiewalking.jpg",               label:"Lopend, Londen"},
+      {file:"Pica_pica_on_roof_top.jpg",             label:"Op dak, Duitsland"},
+    ],
+    sounds:[
+      {file:"Eurasian_Magpie_(Pica_pica)_(W1CDR0001537_BD28).ogg", label:"Roep – British Library", duration:91},
+      {file:"Pica_pica_-_Eurasian_Magpie_XC537413.mp3",            label:"Roep – XC537413",        duration:52},
+      {file:"Pica_pica.ogg",                                        label:"Roep – algemeen",        duration:26},
+    ]
+  },
+  {
+    id:"kraai", name:"Zwarte Kraai", scientific:"Corvus corone",
+    images:[
+      {file:"Rabenkrähe_Corvus_corone_Richard_Bartz.jpg",    label:"Portret, Richard Bartz"},
+      {file:"Krähe_65(loz).JPG",                              label:"Hamburg"},
+      {file:"Corvus_corone_20070813.jpg",                       label:"Staand, 2007"},
+      {file:"FL-Crow.jpg",                                      label:"Portret, algemeen"},
+    ],
+    sounds:[
+      {file:"Carrion_Crow_(Corvus_corone)_(W1CDR0001425_BD18).ogg", label:"Roep – British Library", duration:25},
+      {file:"Corvus_corone_-_Carrion_Crow_XC461980.mp3",            label:"Roep – XC461980",        duration:10},
+      {file:"Corvus_corone_-_Carrion_Crow_XC466390.mp3",            label:"Roep – XC466390",        duration:19},
+      {file:"Corvus_corone_-_Carrion_Crow_XC474879.mp3",            label:"Roep – XC474879",        duration:44},
+    ]
+  },
+  {
+    id:"gaai", name:"Gaai", scientific:"Garrulus glandarius",
+    images:[
+      {file:"Garrulus_glandarius_1_Luc_Viatour.jpg",      label:"Portret, Luc Viatour"},
+      {file:"Garrulus_glandarius_B_Luc_Viatour.jpg",      label:"Zittend, Luc Viatour"},
+      {file:"Garrulus-glandarius-Eurasian-Jay-0a.jpg",    label:"Berlijn"},
+      {file:"2018.05.19.-18-Bad_Salzungen--Eichelhaeher.jpg", label:"Bad Salzungen, DE"},
+    ],
+    sounds:[
+      {file:"Garrulus_glandarius_iphigenia.ogg", label:"Roep – algemeen", duration:20},
+    ],
+    warn:"Beperkt beschikbaar op Wikimedia Commons."
+  },
+  {
+    id:"wilde-eend", name:"Wilde Eend", scientific:"Anas platyrhynchos",
+    images:[
+      {file:"Anas_platyrhynchos_male_female.jpg",    label:"Man en vrouw"},
+      {file:"Male_mallard_duck_2.jpg",              label:"Man, featured"},
+      {file:"Male_mallard3.jpg",                    label:"Man, zwemmend"},
+      {file:"Anas_platyrhynchos_portrait.jpg",      label:"Man, portret"},
+    ],
+    sounds:[
+      {file:"Anas_platyrhynchos_-_Mallard_-_XC62258.ogg", label:"Roep – XC62258 (kort)", duration:4},
+    ],
+    warn:"Slechts één korte opname gevonden op Wikimedia Commons. Zoek aanvulling op xeno-canto.org."
+  },
+  {
+    id:"meerkoet", name:"Meerkoet", scientific:"Fulica atra",
+    images:[
+      {file:"Eurasian_coot_(Fulica_atra)_05.jpg",          label:"Zwemmend"},
+      {file:"Blässhuhn_Fulica_atra_2_Richard_Bartz.jpg",     label:"Lopend, Richard Bartz"},
+      {file:"Eurasian.coot.london.arp.jpg",                label:"St James Park, Londen"},
+      {file:"Fulica_atra_in_Nagara_River.jpg",             label:"Nagara rivier, Japan"},
+    ],
+    sounds:[
+      {file:"Eurasian_Coot_(Fulica_atra)_(W1CDR0001430_BD10).ogg", label:"Roep – British Library", duration:30},
+    ],
+    warn:"Beperkt beschikbaar op Wikimedia Commons."
+  },
+  {
+    id:"boerenzwaluw", name:"Boerenzwaluw", scientific:"Hirundo rustica",
+    images:[
+      {file:"Hirundo_rustica_Ormoz.jpg",                         label:"Zittend, Slovenië"},
+      {file:"Hirundo_rustica_LC0200.jpg",                        label:"Zittend, Chemnitz"},
+      {file:"Hirundo_rustica_hunting.jpg",                       label:"In vlucht, Hannover"},
+      {file:"2013.06.23.-12-Wesenberg-Rauchschwalbe.jpg",        label:"Zittend, Wesenberg"},
+    ],
+    sounds:[
+      {file:"Hirundo_rustica_-_Barn_Swallow_-_XC83449.ogg",  label:"Zang – XC83449",   duration:19},
+      {file:"Hirundo_rustica_-_Barn_Swallow_XC422028.mp3",   label:"Zang – XC422028",  duration:41},
+      {file:"Hirundo_rustica_-_Barn_Swallow_XC468712.mp3",   label:"Zang – XC468712",  duration:39},
+    ]
+  },
+  {
+    id:"gierzwaluw", name:"Gierzwaluw", scientific:"Apus apus",
+    images:[
+      {file:"Apus_apus.jpg",              label:"In vlucht, algemeen"},
+      {file:"Apus_apus_01.jpg",           label:"In vlucht, foto 1"},
+      {file:"Apus_apus_inflight.jpg",     label:"In vlucht"},
+      {file:"Apus_apus_flock_flying.jpg", label:"Groep in vlucht"},
+    ],
+    sounds:[
+      {file:"Mauersegler.ogg", label:"Schreeuw – Duitsland", duration:19},
+    ],
+    warn:"Beperkt beschikbaar op Wikimedia Commons."
+  },
+  {
+    id:"koekoek", name:"Koekoek", scientific:"Cuculus canorus",
+    images:[
+      {file:"Kuckuck_(Cuculus_canorus)_by_Tim_Peukert.jpg", label:"Zittend, Tim Peukert"},
+      {file:"Kuckuck_maennchen.jpg",                        label:"Mannetje"},
+      {file:"Cuculus_canorus_(cropped).jpg",                label:"Close-up, bewerkt"},
+    ],
+    sounds:[
+      {file:"Cuculus_canorus.ogg",      label:"Koekoek-roep",      duration:16},
+      {file:"Cuculus_canorus_song.ogg", label:"Zang – uitgebreid", duration:39},
+    ]
+  },
+  {
+    id:"nachtegaal", name:"Nachtegaal", scientific:"Luscinia megarhynchos",
+    images:[
+      {file:"Nachtigall_(Luscinia_megarhynchos)-2.jpg",                           label:"Zingend, Berlijn"},
+      {file:"Nachtigall_singend_Stromkabel.jpg",                                  label:"Zingend op kabel"},
+      {file:"Luscinia_megarhynchos_Ticino.jpg",                                   label:"Ticino, Zwitserland"},
+      {file:"2018.05.26.-08-Erlichsee_Oberhausen-Rheinhausen--Nachtigall.jpg",   label:"Erlichsee, DE"},
+    ],
+    sounds:[
+      {file:"Common_Nightingale_(Luscinia_megarhynchos)_(W1CDR0001376_BD18).ogg", label:"Zang – British Library", duration:177},
+      {file:"XN_Luscinia_megarhynchos_017.ogg",                                   label:"Zang – XN017",           duration:170},
+    ]
+  },
+  {
+    id:"gr-bonte-specht", name:"Grote Bonte Specht", scientific:"Dendrocopos major",
+    images:[
+      {file:"Great_Spotted_Woodpecker-Mindaugas_Urbonas.jpg",               label:"Portret, Urbonas"},
+      {file:"Woodpecker-nestos-river-thrace-greece-0a.jpg",                 label:"Man, Griekenland"},
+      {file:"2015.05.08.-04-Kaefertaler_Wald-Mannheim--Buntspecht-Weibchen.jpg", label:"Vrouw, Mannheim"},
+    ],
+    sounds:[
+      {file:"XC47350_-_Grote_Bonte_Specht_-_Dendrocopos_major.ogg",          label:"Roep – XC47350 NL",       duration:35},
+      {file:"Great_Spotted_Woodpecker_(Picoides_major)_(W1CDR0001405_BD15).ogg", label:"Roep – British Library", duration:32},
+      {file:"Buntspecht.oga",                                                 label:"Trommelen + roep",        duration:27},
+    ]
+  },
+]; // einde NL
+
+// ══════════════════════════════════════════════════════════════════════
+// 🇪🇸 ESPAÑA  — 25 aves más comunes
+// ══════════════════════════════════════════════════════════════════════
+CATALOGS.es = [
+  {
+    id:"gorr-comun", name:"Gorrión común", scientific:"Passer domesticus",
+    images:[
+      {file:"House_Sparrow_Male_(Passer_Domesticus).jpg", label:"Macho, de pie"},
+      {file:"Passer_domesticus_-Germany-8.jpg",           label:"Macho, Alemania"},
+      {file:"Male_House_Sparrow.jpg",                     label:"Macho, retrato"},
+      {file:"Passer-domesticus-001.jpg",                  label:"Macho, Toronto"},
+    ],
+    sounds:[
+      {file:"House_Sparrows_(Passer_domesticus)_(W1CDR0001537_BD13).ogg", label:"Canto – British Library", duration:80},
+      {file:"Passer_domesticus_-_House_Sparrow_XC124181.ogg",             label:"Canto – XC124181",        duration:43},
+      {file:"House_Sparrow.ogg",                                          label:"Reclamo – general",       duration:17},
+    ]
+  },
+  {
+    id:"mirlo-comun", name:"Mirlo común", scientific:"Turdus merula",
+    images:[
+      {file:"Common_Blackbird.jpg",         label:"Macho, posado"},
+      {file:"Turdus_merula_3.JPG",          label:"Macho, de pie"},
+      {file:"Male_blackbird.jpg",           label:"Macho, primer plano"},
+      {file:"Blackbird_in_sunlight.JPG",    label:"Macho al sol"},
+    ],
+    sounds:[
+      {file:"Turdus_merula_2.ogg",                                      label:"Canto – amanecer",         duration:25},
+      {file:"Common_Blackbird_(Turdus_merula)_(W1CDR0001525_BD22).ogg", label:"Canto – British Library",  duration:55},
+      {file:"Turdus_merula_-_Common_Blackbird_XC541788.mp3",            label:"Canto – XC541788 (corto)", duration:10},
+    ]
+  },
+  {
+    id:"golondrina", name:"Golondrina común", scientific:"Hirundo rustica",
+    images:[
+      {file:"Hirundo_rustica_Ormoz.jpg",                  label:"Posada, Eslovenia"},
+      {file:"Hirundo_rustica_LC0200.jpg",                 label:"Posada, Chemnitz"},
+      {file:"Hirundo_rustica_hunting.jpg",                label:"En vuelo, Hannover"},
+      {file:"2013.06.23.-12-Wesenberg-Rauchschwalbe.jpg", label:"Posada, Wesenberg"},
+    ],
+    sounds:[
+      {file:"Hirundo_rustica_-_Barn_Swallow_-_XC83449.ogg", label:"Canto – XC83449",  duration:19},
+      {file:"Hirundo_rustica_-_Barn_Swallow_XC422028.mp3",  label:"Canto – XC422028", duration:41},
+      {file:"Hirundo_rustica_-_Barn_Swallow_XC468712.mp3",  label:"Canto – XC468712", duration:39},
+    ]
+  },
+  {
+    id:"verdecillo", name:"Verdecillo", scientific:"Serinus serinus",
+    images:[
+      {file:"European_serin_(Serinus_serinus)_male.jpg",   label:"Macho"},
+      {file:"Serinus_serinus_(Madrid,_Spain)_010.jpg",     label:"Madrid, España"},
+      {file:"Serin_cini_mars.JPG",                         label:"General"},
+    ],
+    sounds:[
+      {file:"Gulhämpling_-_Serinus_serinus._Ystad-Sweden-2012.ogg", label:"Canto – Ystad", duration:50},
+      {file:"Serinus_serinus_-_European_Serin_XC483089.mp3",        label:"Canto – XC483089", duration:64},
+    ]
+  },
+  {
+    id:"jilguero", name:"Jilguero", scientific:"Carduelis carduelis",
+    images:[
+      {file:"Carduelis_carduelis_close_up_2.jpg",                        label:"Primer plano, Lancashire"},
+      {file:"European_Goldfinch_on_Spear_Thistle.jpg",                   label:"En cardo, Marburg"},
+      {file:"2017.03.25.-24-Kaefertaler_Wald-Mannheim--Stieglitz.jpg",  label:"Mannheim, Alemania"},
+      {file:"Carduelis_carduelis_-Minsmere_RSPB_reserve,_Suffolk,_England-8.jpg", label:"Suffolk, Inglaterra"},
+    ],
+    sounds:[
+      {file:"Carduelis_carduelis_-_European_Goldfinch_XC101463.mp3",   label:"Canto – XC101463 (corto)", duration:12},
+      {file:"XC101464_-_Putter_-_Carduelis_carduelis.ogg",             label:"Canto – XC101464",         duration:42},
+      {file:"European_Goldfinch_(Carduelis_carduelis)_(W1CDR0001491_BD15).ogg", label:"Canto – British Library", duration:61},
+    ]
+  },
+  {
+    id:"pinzon", name:"Pinzón vulgar", scientific:"Fringilla coelebs",
+    images:[
+      {file:"2017.03.25.-01-Kaefertaler_Wald-Mannheim--Buchfink-Maennchen.jpg", label:"Macho, Mannheim"},
+      {file:"Fringilla_coelebs_chaffinch_male_edit2.jpg",                       label:"Macho, editado"},
+      {file:"Chaffinch_(male).jpg",                                             label:"Macho, general"},
+    ],
+    sounds:[
+      {file:"Chaffinch_(Fringilla_coelebs)_(W1CDR0001527_BD14).ogg", label:"Canto – British Library", duration:74},
+      {file:"XC176182_-_Vink_-_Fringilla_coelebs.ogg",              label:"Canto – XC176182",         duration:38},
+    ]
+  },
+  {
+    id:"carbonero", name:"Carbonero común", scientific:"Parus major",
+    images:[
+      {file:"Parus_major_Luc_Viatour.jpg",     label:"Retrato, Luc Viatour"},
+      {file:"Great_tit_side-on.jpg",           label:"Perfil, Lancashire"},
+      {file:"Parus_major_poised.jpg",          label:"Alerta, Lancashire"},
+    ],
+    sounds:[
+      {file:"Parus_major_song.ogg",                            label:"Canto",                    duration:19},
+      {file:"Great_Tit_(Parus_major)_(W1CDR0001393_BD1).ogg", label:"Canto – British Library",  duration:57},
+      {file:"Parus_major_-_Great_Tit_XC129643.ogg",           label:"Canto – XC129643",         duration:37},
+    ]
+  },
+  {
+    id:"herrerillo", name:"Herrerillo común", scientific:"Cyanistes caeruleus",
+    images:[
+      {file:"2015.01.06.-Mannheim_Vogelstang--Blaumeise.jpg", label:"Posado, Mannheim"},
+      {file:"Blue_tit_three-quarter_close-up_4.jpg",          label:"Tres cuartos, Lancashire"},
+      {file:"Blue_tit_on_feeder.jpg",                         label:"En comedero"},
+    ],
+    sounds:[
+      {file:"Cyanistes_caeruleus_-_Eurasian_Blue_Tit_XC125793.ogg",  label:"Canto – XC125793",        duration:70},
+      {file:"Blue_Tit_(Cyanistes_caeruleus)_(W1CDR0001535_BD30).ogg", label:"Canto – British Library", duration:73},
+      {file:"Cyanistes_caeruleus_-_Eurasian_Blue_Tit_XC541324.mp3",  label:"Canto – XC541324",        duration:33},
+    ]
+  },
+  {
+    id:"petirrojo", name:"Petirrojo", scientific:"Erithacus rubecula",
+    images:[
+      {file:"Erithacus_rubecula_with_cocked_head.jpg",  label:"Cabeza ladeada"},
+      {file:"Rotkehlchen_bird.jpg",                     label:"Posado, Alemania"},
+      {file:"European_Robin_Erithacus_rubecula.jpg",   label:"De pie, Dorset"},
+    ],
+    sounds:[
+      {file:"XC27161_-_Roodborst_-_Erithacus_rubecula.ogg",               label:"Canto – XC27161",         duration:86},
+      {file:"European_Robin_(Erithacus_rubecula)_(W1CDR0001525_BD17).ogg", label:"Canto – British Library",  duration:47},
+      {file:"Erithacus_rubecula.ogg",                                      label:"Reclamo – corto",          duration:16},
+    ]
+  },
+  {
+    id:"curruca-cap", name:"Curruca capirotada", scientific:"Sylvia atricapilla",
+    images:[
+      {file:"Sylvia_atricapilla_male_2.jpg",                                           label:"Macho cantando"},
+      {file:"Female_Blackcap.JPG",                                                     label:"Hembra"},
+      {file:"2017.04.09.-20-Hirschberg_an_der_Bergstraße--Moenchsgrasmuecke-Maennchen.jpg", label:"Macho, Hirschberg"},
+    ],
+    sounds:[
+      {file:"Sylvia_atricapilla_-_Eurasian_Blackcap_XC241427.mp3", label:"Canto – XC241427", duration:32},
+      {file:"Sylvia_atricapilla.ogg",                              label:"Canto – general",  duration:17},
+      {file:"Sylvia_atricapilla_-_Eurasian_Blackcap_XC539580.mp3", label:"Canto – XC539580", duration:42},
+    ]
+  },
+  {
+    id:"mosquitero", name:"Mosquitero común", scientific:"Phylloscopus collybita",
+    images:[
+      {file:"Chiffchaff_-_Phylloscopus_collybita.jpg",  label:"Posado, general"},
+      {file:"Phylloscopus_collybita.jpg",               label:"Retrato"},
+      {file:"Chiffchaff_(Phylloscopus_collybita).jpg",  label:"Posado"},
+    ],
+    sounds:[
+      {file:"Phylloscopus_collybita_-_Common_Chiffchaff_XC125867.ogg",    label:"Reclamo chif-chaf",       duration:22},
+      {file:"Chiffchaff_(Phylloscopus_collybita)_(W1CDR0001497_BD9).ogg", label:"Canto – British Library", duration:45},
+      {file:"Phylloscopus_collybita_7029.ogg",                            label:"Canto – general",         duration:38},
+    ]
+  },
+  {
+    id:"cogujada", name:"Cogujada común", scientific:"Galerida cristata",
+    images:[
+      {file:"Crested_Lark_(22026336489).jpg",          label:"General"},
+      {file:"Galerida_cristata_meridionalis.jpg",      label:"Delos, Grecia"},
+      {file:"Crested_lark_(Galerida_cristata_kleinschmidti).jpg", label:"Marruecos"},
+    ],
+    sounds:[],
+    warn:"No se encontraron archivos de audio en Wikimedia Commons. Buscar en xeno-canto.org."
+  },
+  {
+    id:"paloma-torcaz", name:"Paloma torcaz", scientific:"Columba palumbus",
+    images:[
+      {file:"Common_Wood_Pigeon_(Columba_palumbus).JPG",  label:"Posada, de pie"},
+      {file:"Wood_pidgeon_Columba_palumbus.jpg",          label:"West Kirby, Inglaterra"},
+      {file:"Close-up_picture_of_a_common_wood_pigeon.jpg", label:"Primer plano"},
+    ],
+    sounds:[
+      {file:"Columba_palumbus_birdsong.ogg",                      label:"Arrullo – real",   duration:12},
+      {file:"Columba_palumbus_-_Common_Wood_Pigeon_XC108354.mp3", label:"Canto – XC108354", duration:60},
+    ]
+  },
+  {
+    id:"tortola-turca", name:"Tórtola turca", scientific:"Streptopelia decaocto",
+    images:[
+      {file:"Tourterelle.jpg",                              label:"Retrato, adulto"},
+      {file:"Eurasian_Collared_Dove-Mindaugas_Urbonas-1.jpg", label:"Urbonas, prof."},
+      {file:"Collared_dove.jpg",                            label:"General"},
+      {file:"Streptopelia_decaocto_(Tourterelle_turque).jpg", label:"Bebiendo"},
+    ],
+    sounds:[
+      {file:"Streptopelia_decaocto_-_Eurasian_Collared_Dove_-_XC82758.ogg", label:"Arrullo – XC82758", duration:14},
+      {file:"Tourterelle.ogg",                                               label:"Arrullo – general", duration:10},
+    ]
+  },
+  {
+    id:"abubilla", name:"Abubilla", scientific:"Upupa epops",
+    images:[
+      {file:"Upupa_epops_Madrid_01.jpg",          label:"Madrid, España"},
+      {file:"Upupa_epops_su_un_ciliegio.jpg",     label:"En cerezo, Italia"},
+      {file:"Upupa_con_cresta_aperta.JPG",        label:"Cresta abierta, Véneto"},
+      {file:"Abejaruco_sobre_higuera.jpg",        label:"Sobre higuera, Murcia"},
+    ],
+    sounds:[
+      {file:"Abubilla.ogg",                                        label:"Reclamo – España",   duration:20},
+      {file:"Upupa_epops_·_XC135728.ogg",                          label:"Canto – XC135728",   duration:40},
+      {file:"Upupa_epops_-_Eurasian_Hoopoe_XC108366.mp3",          label:"Canto – XC108366",   duration:30},
+    ]
+  },
+  {
+    id:"urraca-es", name:"Urraca", scientific:"Pica pica",
+    images:[
+      {file:"Eurasian_magpie_(Pica_pica).jpg",   label:"Posada, general"},
+      {file:"Pica_pica_perched_on_branch.jpg",   label:"En rama, Birmingham"},
+      {file:"Commonmagpiewalking.jpg",           label:"Caminando, Londres"},
+    ],
+    sounds:[
+      {file:"Eurasian_Magpie_(Pica_pica)_(W1CDR0001537_BD28).ogg", label:"Reclamo – British Library", duration:91},
+      {file:"Pica_pica_-_Eurasian_Magpie_XC537413.mp3",            label:"Reclamo – XC537413",        duration:52},
+      {file:"Pica_pica.ogg",                                        label:"Reclamo – general",         duration:26},
+    ]
+  },
+  {
+    id:"corneja-es", name:"Corneja negra", scientific:"Corvus corone",
+    images:[
+      {file:"Rabenkrähe_Corvus_corone_Richard_Bartz.jpg", label:"Retrato, R. Bartz"},
+      {file:"Corvus_corone_20070813.jpg",                 label:"De pie, 2007"},
+      {file:"FL-Crow.jpg",                               label:"Retrato, general"},
+    ],
+    sounds:[
+      {file:"Carrion_Crow_(Corvus_corone)_(W1CDR0001425_BD18).ogg", label:"Reclamo – British Library", duration:25},
+      {file:"Corvus_corone_-_Carrion_Crow_XC461980.mp3",            label:"Reclamo – XC461980",        duration:10},
+      {file:"Corvus_corone_-_Carrion_Crow_XC474879.mp3",            label:"Reclamo – XC474879",        duration:44},
+    ]
+  },
+  {
+    id:"estornino-es", name:"Estornino pinto", scientific:"Sturnus vulgaris",
+    images:[
+      {file:"Common_Starling_(Sturnus_vulgaris)_Leek_Wootton.jpg", label:"Posado, Warwickshire"},
+      {file:"Sturnus_vulgaris_eating_a_worm.jpg",                  label:"Con gusano, Toulouse"},
+      {file:"Colourful_starling.jpeg",                             label:"Colorido, N-Irlanda"},
+    ],
+    sounds:[
+      {file:"Common_Starling_(Sturnus_vulgaris)_(W1CDR0001431_BD8).ogg", label:"Canto – British Library", duration:40},
+      {file:"Sturnus_vulgaris_-_Common_Starling_XC474427.mp3",           label:"Canto – XC474427",        duration:29},
+      {file:"Sturnus_vulgaris.ogg",                                      label:"Canto – general",         duration:25},
+    ]
+  },
+  {
+    id:"verdejon", name:"Verderón común", scientific:"Chloris chloris",
+    images:[
+      {file:"Greenfinch_(Chloris_chloris)_Zelentarka.jpg",           label:"Macho, Zelentarka"},
+      {file:"European_greenfinch_(Chloris_chloris_voousi)_male.jpg", label:"Macho, subespecie"},
+      {file:"European_Greenfinch.jpg",                               label:"Macho, general"},
+    ],
+    sounds:[
+      {file:"Carduelis_chloris.ogg", label:"Canto – Rusia", duration:11},
+    ],
+    warn:"Pocos archivos disponibles en Wikimedia Commons. Buscar en xeno-canto.org."
+  },
+  {
+    id:"vencejo-es", name:"Vencejo común", scientific:"Apus apus",
+    images:[
+      {file:"Apus_apus.jpg",              label:"En vuelo, general"},
+      {file:"Apus_apus_01.jpg",           label:"En vuelo, foto 1"},
+      {file:"Apus_apus_inflight.jpg",     label:"En vuelo"},
+      {file:"Apus_apus_flock_flying.jpg", label:"Grupo en vuelo"},
+    ],
+    sounds:[
+      {file:"Mauersegler.ogg", label:"Grito – Alemania", duration:19},
+    ],
+    warn:"Pocos archivos disponibles en Wikimedia Commons."
+  },
+  {
+    id:"lavandera", name:"Lavandera blanca", scientific:"Motacilla alba",
+    images:[
+      {file:"Motacilla_alba_alba.JPG",                          label:"Subsp. alba, adulto"},
+      {file:"2016.07.17.-05-Westensee_Felde--Bachstelze.jpg",  label:"Felde, Alemania"},
+      {file:"Pied_Wagtail_perching.jpg",                        label:"Subsp. yarrellii"},
+    ],
+    sounds:[
+      {file:"Motacilla_alba_-_White_Wagtail_XC466458.mp3", label:"Reclamo – XC466458", duration:27},
+      {file:"Motacilla_alba_-_White_Wagtail_XC501786.mp3", label:"Reclamo – XC501786", duration:23},
+    ]
+  },
+  {
+    id:"abejaruco", name:"Abejaruco", scientific:"Merops apiaster",
+    images:[
+      {file:"Abejaruco_sobre_higuera.jpg",                   label:"Sobre higuera, Murcia"},
+      {file:"Merops_apiaster_04.jpg",                        label:"Pareja, Ariège, Francia"},
+      {file:"European_Bee-eater.JPG",                        label:"Dibba, EAU"},
+      {file:"Merops_apiaster_1_(Martin_Mecnarowski).jpg",    label:"Moravia del Sur, CZ"},
+    ],
+    sounds:[
+      {file:"Merops_apiaster_-_European_Bee-eater_XC477953.mp3", label:"Reclamo – XC477953", duration:17},
+      {file:"Bijeneter_-_SoundCloud_-_Beeld_en_Geluid.ogg",      label:"Reclamo – general",  duration:46},
+    ]
+  },
+  {
+    id:"cuco-es", name:"Cuco común", scientific:"Cuculus canorus",
+    images:[
+      {file:"Kuckuck_(Cuculus_canorus)_by_Tim_Peukert.jpg", label:"Posado, Tim Peukert"},
+      {file:"Kuckuck_maennchen.jpg",                        label:"Macho"},
+      {file:"Cuculus_canorus_(cropped).jpg",               label:"Primer plano"},
+    ],
+    sounds:[
+      {file:"Cuculus_canorus.ogg",      label:"Cucú – reclamo", duration:16},
+      {file:"Cuculus_canorus_song.ogg", label:"Canto extendido", duration:39},
+    ]
+  },
+  {
+    id:"lechuza", name:"Lechuza común", scientific:"Tyto alba",
+    images:[
+      {file:"Barn_Owl_in_Norfolk.jpg",       label:"T. a. alba, Norfolk"},
+      {file:"Barn_Owl_with_prey_Norfolk.jpg", label:"Con presa, Norfolk"},
+      {file:"Flying_owl.jpg",                label:"En vuelo, Alemania"},
+      {file:"Barn_Owl_RWD1.jpg",             label:"Eagle Encounters, SA"},
+    ],
+    sounds:[
+      {file:"Tyto_alba_-_Western_Barn_Owl_XC432000.mp3", label:"Canto – XC432000", duration:15},
+      {file:"Tyto_alba_-_Western_Barn_Owl_XC433736.mp3", label:"Canto – XC433736", duration:32},
+    ]
+  },
+  {
+    id:"ciguena", name:"Cigüeña blanca", scientific:"Ciconia ciconia",
+    images:[
+      {file:"White_Stork_Weißstorch_Ciconia_ciconia.jpg", label:"Imagen destacada"},
+      {file:"Ooievaar_in_het_Zwin.jpg",                   label:"Hábitat natural"},
+      {file:"Darica_Leylek_00883.jpg",                    label:"Adulto, Darica"},
+    ],
+    sounds:[
+      {file:"Ciconia_ciconia_bill-clattering.ogg", label:"Castañeteo de pico", duration:39},
+      {file:"Klapperstorch.ogg",                   label:"Reclamo – general",  duration:12},
+    ]
+  },
+  {
+    id:"paloma-dom", name:"Paloma doméstica", scientific:"Columba livia",
+    images:[
+      {file:"Rock_Pigeon_Columba_livia_3264px.jpg", label:"Central Park, Nueva York"},
+      {file:"Pigeon_portrait_4861.jpg",             label:"Retrato, adulto"},
+      {file:"Strutting_pigeon.gk.jpg",              label:"Pavoneándose"},
+      {file:"Columba_livia_domestica.JPG",          label:"Riga, Letonia"},
+    ],
+    sounds:[],
+    warn:"No se encontraron archivos de audio en Wikimedia Commons."
+  },
+]; // einde ES
+
+const CATALOG = CATALOGS; // alias voor compatibiliteit
+
+// ═══════════════════════════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════════════════════════
+const states = { nl: {}, es: {} };
+const state  = states; // alias — wordt gebruikt als states[activeCountry]
+
+function initState() {
+  ["nl", "es"].forEach(country => {
+    const saved = loadLS(country);
+    CATALOGS[country].forEach(bird => {
+      const s = saved[bird.id] || {};
+      states[country][bird.id] = {
+        enabled:     s.enabled !== false,
+        images:      s.images  || [bird.images[0]?.file].filter(Boolean),
+        sounds:      s.sounds  || [],
+        soundStarts: s.soundStarts || {},
+      };
+    });
+  });
+}
+
+function saveLS() {
+  const data = {};
+  CATALOGS[activeCountry].forEach(b => { data[b.id] = states[activeCountry][b.id]; });
+  localStorage.setItem(LS_KEYS[activeCountry], JSON.stringify(data));
+  updateStatusBar();
+}
+
+function loadLS(country) {
+  try { return JSON.parse(localStorage.getItem(LS_KEYS[country])) || {}; } catch { return {}; }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// STATUS BAR
+// ═══════════════════════════════════════════════════════════════════════════
+function updateStatusBar() {
+  const cat = CATALOGS[activeCountry];
+  const st  = states[activeCountry];
+  const n   = cat.filter(b => st[b.id].enabled).length;
+  const label = activeCountry === "nl" ? "vogels" : "aves";
+  document.getElementById("status-bar").textContent =
+    `${n} van ${cat.length} ${label} actief · spel kiest ${GAME_BIRDS} willekeurig`;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// BUILD UI
+// ═══════════════════════════════════════════════════════════════════════════
+function buildUI() {
+  const container = document.getElementById("birds-container");
+  container.innerHTML = "";
+  CATALOGS[activeCountry].forEach(bird => buildBirdSection(bird, container));
+  updateStatusBar();
+  loadAllImages();
+}
+
+function switchTab(country, btn) {
+  activeCountry = country;
+  document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  buildUI();
+}
+
+function buildBirdSection(bird, container) {
+  const st  = states[activeCountry][bird.id];
+  const sec = document.createElement("div");
+  sec.className = "bird-section" + (st.enabled ? "" : " disabled");
+  sec.id = "sec-" + bird.id;
+
+  // ── header ──
+  const hdr = document.createElement("div");
+  hdr.className = "bird-header";
+  hdr.innerHTML = `
+    <h2>${bird.name}</h2>
+    <em>${bird.scientific}</em>
+    <button class="toggle-bird ${st.enabled ? "on" : "off"}"
+      onclick="toggleBird('${bird.id}',this); event.stopPropagation()">
+      ${st.enabled ? "✓ Actief" : "✗ Uitgeschakeld"}
+    </button>
+    <span class="chevron">▾</span>`;
+  hdr.addEventListener("click", () => toggleCollapse(sec));
+  sec.appendChild(hdr);
+
+  // ── body ──
+  const body = document.createElement("div");
+  body.className = "bird-body";
+
+  // images
+  const imgSec = document.createElement("div");
+  imgSec.className = "subsection";
+  imgSec.innerHTML = `<h3>📷 Plaatjes — klik om te (de)selecteren (spel kiest willekeurig)</h3>`;
+  const imgRow = document.createElement("div");
+  imgRow.className = "img-row";
+  imgRow.id = "imgs-" + bird.id;
+  bird.images.forEach(img => {
+    const isSelected = st.images.includes(img.file);
+    const card = document.createElement("div");
+    card.className = "img-card" + (isSelected ? " selected" : "");
+    card.dataset.file = img.file;
+    card.innerHTML = `
+      <span class="img-num"></span>
+      <img data-file="${img.file}" alt="${img.label}"
+           style="width:100%;height:100px;object-fit:cover;display:block;background:#ddd">
+      <div class="img-meta">
+        <div class="img-name">${img.label}</div>
+        <div class="img-file">${img.file}</div>
+      </div>`;
+    card.onclick = () => toggleImage(bird.id, img.file, imgRow);
+    imgRow.appendChild(card);
+  });
+  refreshImageNumbers(bird.id, imgRow);
+  imgSec.appendChild(imgRow);
+  body.appendChild(imgSec);
+
+  // sounds
+  const sndSec = document.createElement("div");
+  sndSec.className = "subsection";
+  sndSec.innerHTML = `<h3>🔊 Geluiden — klik "Gebruik" om te selecteren</h3>`;
+  const sndList = document.createElement("div");
+  sndList.className = "sound-list";
+  bird.sounds.forEach(snd => {
+    const isSelected = st.sounds.some(s => s.file === snd.file);
+    const startVal   = st.soundStarts[snd.file] || 0;
+    const row = document.createElement("div");
+    row.className = "sound-row" + (isSelected ? " selected" : "");
+
+    // Bouw rij op met losse elementen — geen inline onclick, om problemen
+    // met apostrofs en spaties in bestandsnamen te vermijden.
+    const playBtn = document.createElement("button");
+    playBtn.className = "play-btn";
+    playBtn.textContent = "▶";
+    playBtn.addEventListener("click", () => togglePlay(snd.file, playBtn));
+
+    const info = document.createElement("div");
+    info.className = "sound-info";
+    info.innerHTML = `<div class="sound-label">${snd.label}</div>
+      <div class="sound-file">${snd.file} &nbsp;·&nbsp; ~${snd.duration}s</div>`;
+
+    const startDiv = document.createElement("div");
+    startDiv.className = "sound-start";
+    const startInput = document.createElement("input");
+    startInput.type = "number";
+    startInput.value = startVal;
+    startInput.min = 0;
+    startInput.max = snd.duration;
+    startInput.step = 0.5;
+    startInput.addEventListener("change", () =>
+      updateStart(bird.id, snd.file, +startInput.value));
+    const lblStart = document.createElement("label");
+    lblStart.textContent = "Start:";
+    const lblSec = document.createElement("label");
+    lblSec.textContent = "sec";
+    startDiv.appendChild(lblStart);
+    startDiv.appendChild(startInput);
+    startDiv.appendChild(lblSec);
+
+    const useBtn = document.createElement("button");
+    useBtn.className = "use-btn" + (isSelected ? " on" : "");
+    useBtn.textContent = isSelected ? "✓ Gebruik" : "Gebruik";
+    useBtn.addEventListener("click", () => toggleSound(bird.id, snd.file, useBtn));
+
+    row.appendChild(playBtn);
+    row.appendChild(info);
+    row.appendChild(startDiv);
+    row.appendChild(useBtn);
+    sndList.appendChild(row);
+  });
+  if (bird.warn) {
+    const w = document.createElement("p");
+    w.className = "warn"; w.textContent = "⚠️ " + bird.warn;
+    sndList.appendChild(w);
+  }
+  sndSec.appendChild(sndList);
+  body.appendChild(sndSec);
+
+  sec.appendChild(body);
+  container.appendChild(sec);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// INTERACTIONS
+// ═══════════════════════════════════════════════════════════════════════════
+function toggleBird(birdId, btn) {
+  const st = states[activeCountry][birdId];
+  st.enabled = !st.enabled;
+  btn.className = "toggle-bird " + (st.enabled ? "on" : "off");
+  btn.textContent = st.enabled ? "✓ Actief" : "✗ Uitgeschakeld";
+  document.getElementById("sec-" + birdId).classList.toggle("disabled", !st.enabled);
+  saveLS();
+}
+
+function toggleCollapse(sec) {
+  sec.classList.toggle("collapsed");
+}
+
+function toggleImage(birdId, file, imgRow) {
+  const list = states[activeCountry][birdId].images;
+  const idx  = list.indexOf(file);
+  if (idx >= 0) {
+    if (list.length === 1) return; // minimaal 1
+    list.splice(idx, 1);
+  } else {
+    list.push(file);
+  }
+  refreshImageNumbers(birdId, imgRow);
+  saveLS();
+}
+
+function refreshImageNumbers(birdId, imgRow) {
+  const list = states[activeCountry][birdId].images;
+  imgRow.querySelectorAll(".img-card").forEach(card => {
+    const pos = list.indexOf(card.dataset.file);
+    const sel = pos >= 0;
+    card.classList.toggle("selected", sel);
+    const numEl = card.querySelector(".img-num");
+    numEl.textContent = list.length > 1 ? (sel ? (pos + 1) : "") : "✓";
+  });
+}
+
+function toggleSound(birdId, file, btn) {
+  const sounds = states[activeCountry][birdId].sounds;
+  const idx    = sounds.findIndex(s => s.file === file);
+  if (idx >= 0) {
+    sounds.splice(idx, 1);
+    btn.className = "use-btn";
+    btn.textContent = "Gebruik";
+    btn.closest(".sound-row").classList.remove("selected");
+  } else {
+    const start = states[activeCountry][birdId].soundStarts[file] || 0;
+    sounds.push({ file, start });
+    btn.className = "use-btn on";
+    btn.textContent = "✓ Gebruik";
+    btn.closest(".sound-row").classList.add("selected");
+  }
+  saveLS();
+}
+
+function updateStart(birdId, file, val) {
+  states[activeCountry][birdId].soundStarts[file] = val;
+  const snd = states[activeCountry][birdId].sounds.find(s => s.file === file);
+  if (snd) snd.start = val;
+  saveLS();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// AUDIO PREVIEW  —  Web Audio API (fade-in + normalisatie)
+// ═══════════════════════════════════════════════════════════════════════════
+let curAudioCtx    = null;
+let curAudioCache  = {};
+let curSource      = null;
+let curFadeGain    = null;
+let curBtn         = null;
+
+const C_TARGET_RMS = 0.12;
+const C_MAX_GAIN   = 10;
+const C_FADE_IN    = 0.1;
+
+function getCurAudioCtx() {
+  if (!curAudioCtx)
+    curAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return curAudioCtx;
+}
+
+function curRmsGain(buffer, startAt) {
+  const sr    = buffer.sampleRate;
+  const start = Math.floor(startAt * sr);
+  const end   = Math.min(start + Math.floor(30 * sr), buffer.length); // analyseer max 30s
+  let sumSq = 0, n = 0;
+  for (let ch = 0; ch < buffer.numberOfChannels; ch++) {
+    const data = buffer.getChannelData(ch);
+    for (let i = start; i < end; i++) { sumSq += data[i] ** 2; n++; }
+  }
+  const rms = n > 0 ? Math.sqrt(sumSq / n) : 0;
+  return rms > 0 ? Math.min(C_TARGET_RMS / rms, C_MAX_GAIN) : 1;
+}
+
+function stopCurrent() {
+  if (curSource) {
+    try {
+      curFadeGain?.gain.cancelScheduledValues(curAudioCtx?.currentTime ?? 0);
+      curFadeGain?.gain.setValueAtTime(0, curAudioCtx?.currentTime ?? 0);
+      curSource.stop();
+    } catch (_) {}
+    curSource = null; curFadeGain = null;
+  }
+  if (curBtn) { curBtn.textContent = "▶"; curBtn.classList.remove("playing"); curBtn = null; }
+}
+
+async function togglePlay(filename, btn) {
+  // Stop huidig geluid
+  if (curSource || curBtn) {
+    const wasBtn = curBtn;
+    stopCurrent();
+    if (wasBtn === btn) return; // zelfde knop → stoppen
+  }
+
+  const startInput = btn.closest(".sound-row").querySelector("input[type=number]");
+  const startAt    = parseFloat(startInput?.value) || 0;
+  const url        = WM_AUDIO + encodeURIComponent(filename);
+  const ctx        = getCurAudioCtx();
+  await ctx.resume();
+
+  btn.textContent = "⏳"; btn.classList.add("playing"); curBtn = btn;
+
+  try {
+    if (!curAudioCache[url]) {
+      const resp = await fetch(url, { mode: "cors" });
+      const ab   = await resp.arrayBuffer();
+      curAudioCache[url] = await ctx.decodeAudioData(ab);
+    }
+    const buffer = curAudioCache[url];
+    const gain   = curRmsGain(buffer, startAt);
+
+    const source   = ctx.createBufferSource();
+    source.buffer  = buffer;
+    const fadeNode = ctx.createGain();
+    fadeNode.gain.setValueAtTime(0, ctx.currentTime);
+    fadeNode.gain.linearRampToValueAtTime(gain, ctx.currentTime + C_FADE_IN);
+    source.connect(fadeNode);
+    fadeNode.connect(ctx.destination);
+    source.start(0, startAt);
+
+    curSource   = source;
+    curFadeGain = fadeNode;
+    btn.textContent = "■";
+
+    source.addEventListener("ended", () => {
+      if (curBtn === btn) { btn.textContent = "▶"; btn.classList.remove("playing"); curBtn = null; }
+    });
+
+  } catch (err) {
+    console.warn("Curator audio fallback:", err.message);
+    btn.textContent = "❌"; btn.classList.remove("playing"); curBtn = null;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// EXPORT
+// ═══════════════════════════════════════════════════════════════════════════
+function exportSelection() {
+  const cat   = CATALOGS[activeCountry];
+  const st_all = states[activeCountry];
+  const lines = ["// ── CURATOR EXPORT ─────────────────────────────────────────────────────", ""];
+  const flag  = activeCountry === "nl" ? "🇳🇱 Nederland" : "🇪🇸 España";
+  const active = cat.filter(b => st_all[b.id].enabled);
+  lines.push(`// ${flag} — ${active.length} actieve vogels (spel kiest ${GAME_BIRDS} willekeurig)`);
+  lines.push("");
+  cat.forEach(bird => {
+    const st = st_all[bird.id];
+    lines.push(`// ${bird.name} (${bird.scientific}) — ${st.enabled ? "ACTIEF" : "UITGESCHAKELD"}`);
+    if (st.enabled) {
+      const imgs = st.images;
+      lines.push(`  images: [${imgs.map(f => `"${f}"`).join(", ")}]`);
+      if (st.sounds.length === 0) {
+        lines.push(`  sounds: (geen geselecteerd)`);
+      } else {
+        st.sounds.forEach(s => lines.push(`  sound: "${s.file}", start: ${s.start || 0}s`));
+      }
+    }
+    lines.push("");
+  });
+  const out = document.getElementById("export-output");
+  out.textContent = lines.join("\n");
+  out.style.display = "block";
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// AFBEELDINGEN LADEN VIA WIKIMEDIA API  (CORS-veilig, geen redirect-probleem)
+// ═══════════════════════════════════════════════════════════════════════════
+async function loadAllImages() {
+  // Verzamel alle unieke bestandsnamen
+  const files = [...new Set(CATALOGS[activeCountry].flatMap(b => b.images.map(i => i.file)))];
+
+  // Wikimedia API accepteert max 50 titels per aanvraag
+  for (let i = 0; i < files.length; i += 50) {
+    const batch  = files.slice(i, i + 50);
+    const titles = batch.map(f => "File:" + f).join("|");
+    const url    = `${WM_API}?action=query&titles=${encodeURIComponent(titles)}`
+                 + `&prop=imageinfo&iiprop=url&iiurlwidth=${THUMB_W}`
+                 + `&format=json&origin=*`;
+    try {
+      const resp = await fetch(url);
+      const json = await resp.json();
+      // Bouw een map: genormaliseerde bestandsnaam → URL
+      const urlMap = {};
+      for (const page of Object.values(json.query?.pages || {})) {
+        const info = page.imageinfo?.[0];
+        if (!info) continue;
+        // API geeft spaties terug; wij slaan op met underscores → normaliseer
+        const key = page.title.replace(/^File:/, "").replace(/ /g, "_");
+        urlMap[key] = info.thumburl || info.url;
+      }
+      // Wijs URL's toe aan img-elementen
+      document.querySelectorAll("img[data-file]").forEach(img => {
+        const key = img.dataset.file.replace(/ /g, "_");
+        if (urlMap[key]) img.src = urlMap[key];
+      });
+    } catch (e) {
+      console.warn("Afbeeldingen konden niet worden geladen:", e);
+    }
+  }
+}
+
+// ── BOOT ──
+initState();
+buildUI();
+loadAllImages();
+</script>
+</body>
+</html>
