@@ -177,12 +177,12 @@
     .player-score .p-score { font-size: 1.2em; font-weight: 700; }
 
     .scorebar-right { display: flex; align-items: center; gap: 10px; }
-    #pairs-left { font-size: 0.82em; color: #7a5c3a; }
+    #pairs-left { font-size: 0.82em; color: #7a5c3a; display: inline-flex; align-items: center; }
     .menu-btn {
       padding: 5px 13px; border-radius: 16px;
       border: none; background: #fef0e4; color: #8a3a10;
       cursor: pointer; font-size: 0.83em; font-weight: 600;
-      transition: all .16s;
+      transition: all .16s; line-height: 1; vertical-align: middle;
     }
     .menu-btn:hover { background: #fde0c8; }
 
@@ -283,6 +283,64 @@
     }
     #pause-overlay.hidden { opacity: 0; pointer-events: none; }
 
+    #credits-overlay {
+      position: fixed; inset: 0;
+      background: rgba(60,35,10,.65);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 20;
+      transition: opacity .2s;
+    }
+    #credits-overlay.hidden { opacity: 0; pointer-events: none; }
+    #credits-box {
+      background: linear-gradient(170deg, #fef6e4, #fffdf8);
+      border-radius: 18px;
+      border: 1.5px solid #e8c89a;
+      width: min(680px, 94vw);
+      max-height: 80vh;
+      display: flex; flex-direction: column;
+      overflow: hidden;
+    }
+    #credits-header {
+      padding: 16px 20px 12px;
+      border-bottom: 1px solid #e8c89a;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-shrink: 0;
+    }
+    #credits-header h2 { margin: 0; font-size: 1rem; color: #5a3810; }
+    #credits-close {
+      background: none; border: none; cursor: pointer;
+      font-size: 1.3rem; color: #8a6030; line-height: 1;
+      padding: 2px 6px; border-radius: 8px;
+    }
+    #credits-close:hover { background: #fde0c8; }
+    #credits-body { overflow-y: auto; padding: 14px 20px 20px; }
+    .cr-bird { margin-bottom: 16px; }
+    .cr-bird-name {
+      font-size: 0.82rem; font-weight: 700; color: #8a3a10;
+      text-transform: capitalize; margin-bottom: 4px;
+      border-bottom: 1px solid #f0d5b0; padding-bottom: 2px;
+    }
+    .cr-item {
+      font-size: 0.75rem; color: #5a3810;
+      display: flex; gap: 6px; align-items: baseline;
+      line-height: 1.5; padding: 1px 0;
+    }
+    .cr-item .cr-type { color: #a07840; flex-shrink: 0; min-width: 20px; }
+    .cr-item a { color: #d4683a; text-decoration: none; }
+    .cr-item a:hover { text-decoration: underline; }
+    .cr-lic {
+      background: #f5e8d5; color: #7a4820;
+      font-size: 0.68rem; padding: 1px 5px; border-radius: 4px;
+      flex-shrink: 0;
+    }
+    .credits-btn {
+      padding: 5px 13px; border-radius: 16px;
+      border: none; background: transparent; color: #7a5c3a;
+      cursor: pointer; font-size: 0.83em; font-weight: 600;
+      transition: all .16s; line-height: 1; vertical-align: middle;
+    }
+    .credits-btn:hover { background: #fde0c8; }
+
     .pause-box {
       background: linear-gradient(170deg, #fef6e4, #ffffff, #fdebd0);
       border-radius: 22px;
@@ -365,8 +423,9 @@
 <div id="game-screen" class="screen hidden">
   <div class="scorebar">
     <div id="scores"></div>
+    <span id="pairs-left"></span>
     <div class="scorebar-right">
-      <span id="pairs-left"></span>
+      <button class="credits-btn" onclick="openCredits()">Credits</button>
       <button class="menu-btn" onclick="openPause()">☰ Menu</button>
     </div>
   </div>
@@ -399,6 +458,17 @@
       <button class="win-btn primary"   onclick="replayGame()">↺ Zelfde spelers</button>
       <button class="win-btn secondary" onclick="goToSetup()">☰ Nieuw spel</button>
     </div>
+  </div>
+</div>
+
+<!-- Credits overlay — outside game-screen so it works from any screen -->
+<div id="credits-overlay" class="hidden">
+  <div id="credits-box">
+    <div id="credits-header">
+      <h2>Credits — media licenties</h2>
+      <button id="credits-close" onclick="closeCredits()">✕</button>
+    </div>
+    <div id="credits-body"></div>
   </div>
 </div>
 
@@ -1106,6 +1176,46 @@ function openPause() {
 function closePause() {
   paused = false;
   document.getElementById("pause-overlay").classList.add("hidden");
+}
+
+const CREDITS_NL = {"merel":{"images":[{"author":"Andreas Trepte","license":"CC BY-SA 2.5","license_url":"https://creativecommons.org/licenses/by-sa/2.5","page_url":"https://commons.wikimedia.org/wiki/File:Common_Blackbird.jpg"},{"author":"Tony Wills","license":"CC BY 2.5","license_url":"https://creativecommons.org/licenses/by/2.5","page_url":"https://commons.wikimedia.org/wiki/File:Male_blackbird.jpg"}],"sounds":[{"author":"Oona Räisänen (Mysid)","license":"Public domain","license_url":"","page_url":"https://commons.wikimedia.org/wiki/File:Turdus_merula_2.ogg"},{"author":"Benoît Van Hecke","license":"CC BY-SA 4.0","license_url":"https://creativecommons.org/licenses/by-sa/4.0","page_url":"https://commons.wikimedia.org/wiki/File:Turdus_merula_-_Common_Blackbird_XC541788.mp3"}]},"koolmees":{"images":[{"author":"Luc Viatour","license":"CC BY-SA 2.0","license_url":"https://creativecommons.org/licenses/by-sa/2.0","page_url":"https://commons.wikimedia.org/wiki/File:Parus_major_Luc_Viatour.jpg"},{"author":"Francis Franklin","license":"CC BY-SA 4.0","license_url":"https://creativecommons.org/licenses/by-sa/4.0","page_url":"https://commons.wikimedia.org/wiki/File:Parus_major_poised.jpg"},{"author":"Sylvain Haye","license":"CC BY-SA 3.0","license_url":"https://creativecommons.org/licenses/by-sa/3.0","page_url":"https://commons.wikimedia.org/wiki/File:Mesange_charbonniere-s_haye.jpg"},{"author":"Francis C. Franklin","license":"CC BY-SA 3.0","license_url":"https://creativecommons.org/licenses/by-sa/3.0","page_url":"https://commons.wikimedia.org/wiki/File:Great_tit_side-on.jpg"}],"sounds":[{"author":"Vladimir Yu. Arkhipov, Arkhivov","license":"CC BY-SA 3.0","license_url":"https://creativecommons.org/licenses/by-sa/3.0","page_url":"https://commons.wikimedia.org/wiki/File:Parus_major_song.ogg"},{"author":"onbekend","license":"CC BY-SA 4.0","license_url":"https://creativecommons.org/licenses/by-sa/4.0","page_url":"https://commons.wikimedia.org/wiki/File:Great_Tit_(Parus_major)_(W1CDR0001393_BD1).ogg"}]},"roodborst":{"images":[{"author":"Francis C. Franklin","license":"CC BY-SA 3.0","license_url":"https://creativecommons.org/licenses/by-sa/3.0","page_url":"https://commons.wikimedia.org/wiki/File:Erithacus_rubecula_with_cocked_head.jpg"},{"author":"Ting Chen","license":"CC BY 2.0","license_url":"https://creativecommons.org/licenses/by/2.0","page_url":"https://commons.wikimedia.org/wiki/File:Rotkehlchen_bird.jpg"},{"author":"David Croad","license":"CC BY 3.0","license_url":"https://creativecommons.org/licenses/by/3.0","page_url":"https://commons.wikimedia.org/wiki/File:European_Robin_Erithacus_rubecula.jpg"},{"author":"Rasbak","license":"CC BY-SA 3.0","license_url":"https://creativecommons.org/licenses/by-sa/3.0","page_url":"https://commons.wikimedia.org/wiki/File:Erithacus_rubecula_with_earthworm,_Roodborstje_met_regenworm.jpg"}],"sounds":[{"author":"Sander Pieterse","license":"CC BY-SA 4.0","license_url":"https://creativecommons.org/licenses/by-sa/4.0","page_url":"https://commons.wikimedia.org/wiki/File:XC27161_-_Roodborst_-_Erithacus_rubecula.ogg"},{"author":"Vladimir Yu. Arkhipov, Arkhivov","license":"CC BY-SA 3.0","license_url":"https://creativecommons.org/licenses/by-sa/3.0","page_url":"https://commons.wikimedia.org/wiki/File:Erithacus_rubecula.ogg"}]},"kauw":{"images":[{"author":"Adrian Pingstone","license":"Public domain","license_url":"","page_url":"https://commons.wikimedia.org/wiki/File:Jackdaw_arp_750pix.jpg"},{"author":"onbekend","license":"Public domain","license_url":"","page_url":"https://commons.wikimedia.org/wiki/File:Jackdaw.northdevon.arp-sh.750pix.jpg"}],"sounds":[{"author":"Veljo Runnel","license":"CC BY-SA 4.0","license_url":"https://creativecommons.org/licenses/by-sa/4.0","page_url":"https://commons.wikimedia.org/wiki/File:Corvus_monedula_calls.ogg"}]},"spreeuw":{"images":[{"author":"Charles J. Sharp","license":"CC BY-SA 4.0","license_url":"https://creativecommons.org/licenses/by-sa/4.0","page_url":"https://commons.wikimedia.org/wiki/File:Common_Starling_(Sturnus_vulgaris)_Leek_Wootton.jpg"},{"author":"Philip Heron","license":"CC BY-SA 3.0","license_url":"https://creativecommons.org/licenses/by-sa/3.0","page_url":"https://commons.wikimedia.org/wiki/File:Colourful_starling.jpeg"},{"author":"RawheaD Rex","license":"CC BY-SA 2.0","license_url":"https://creativecommons.org/licenses/by-sa/2.0","page_url":"https://commons.wikimedia.org/wiki/File:Sturnus_vulgaris_-hand_feeding_-London-8.jpg"}],"sounds":[{"author":"Vladimir Yu. Arkhipov, Arkhivov","license":"CC BY-SA 3.0","license_url":"https://creativecommons.org/licenses/by-sa/3.0","page_url":"https://commons.wikimedia.org/wiki/File:Sturnus_vulgaris.ogg"},{"author":"Marie-Lan Taÿ Pamart","license":"CC BY-SA 4.0","license_url":"https://creativecommons.org/licenses/by-sa/4.0","page_url":"https://commons.wikimedia.org/wiki/File:Sturnus_vulgaris_-_Common_Starling_XC483803.mp3"}]},"huismus":{"images":[{"author":"Joe Ravi","license":"CC BY-SA 3.0","license_url":"https://creativecommons.org/licenses/by-sa/3.0","page_url":"https://commons.wikimedia.org/wiki/File:House_Sparrow_Male_(Passer_Domesticus).jpg"},{"author":"Thomas Quine","license":"CC BY 2.0","license_url":"https://creativecommons.org/licenses/by/2.0","page_url":"https://commons.wikimedia.org/wiki/File:Male_House_Sparrow.jpg"},{"author":"Jar0d","license":"CC BY-SA 2.0","license_url":"https://creativecommons.org/licenses/by-sa/2.0","page_url":"https://commons.wikimedia.org/wiki/File:Passer_domesticus_-Germany-8.jpg"}],"sounds":[{"author":"Gypsypkd","license":"Public domain","license_url":"","page_url":"https://commons.wikimedia.org/wiki/File:House_Sparrow.ogg"},{"author":"Jonathon Jongsma","license":"CC BY-SA 3.0","license_url":"https://creativecommons.org/licenses/by-sa/3.0","page_url":"https://commons.wikimedia.org/wiki/File:Passer_domesticus_-_House_Sparrow_XC86749.mp3"}]},"vink":{"images":[{"author":"Tony Wills","license":"CC BY 2.5","license_url":"https://creativecommons.org/licenses/by/2.5","page_url":"https://commons.wikimedia.org/wiki/File:Chaffinch_(male).jpg"},{"author":"Regani","license":"CC BY-SA 3.0","license_url":"https://creativecommons.org/licenses/by-sa/3.0","page_url":"https://commons.wikimedia.org/wiki/File:Fringilla_coelebs_in_Thuringia_Germany.jpg"},{"author":"MichaelMaggs / Arad","license":"CC BY-SA 2.5","license_url":"https://creativecommons.org/licenses/by-sa/2.5","page_url":"https://commons.wikimedia.org/wiki/File:Fringilla_coelebs_chaffinch_male_edit2.jpg"}],"sounds":[{"author":"onbekend","license":"CC BY-SA 4.0","license_url":"https://creativecommons.org/licenses/by-sa/4.0","page_url":"https://commons.wikimedia.org/wiki/File:Chaffinch_(Fringilla_coelebs)_(W1CDR0001527_BD14).ogg"},{"author":"Oona Räisänen (Mysid)","license":"Public domain","license_url":"","page_url":"https://commons.wikimedia.org/wiki/File:Fringilla_coelebs.ogg"}]},"houtduif":{"images":[{"author":"Charles J. Sharp","license":"CC BY-SA 3.0","license_url":"https://creativecommons.org/licenses/by-sa/3.0","page_url":"https://commons.wikimedia.org/wiki/File:Common_Wood_Pigeon_(Columba_palumbus).JPG"},{"author":"DickDaniels","license":"CC BY-SA 3.0","license_url":"https://creativecommons.org/licenses/by-sa/3.0","page_url":"https://commons.wikimedia.org/wiki/File:Wood_pidgeon_Columba_palumbus.jpg"},{"author":"Marek Szczepanek","license":"CC BY-SA 3.0","license_url":"https://creativecommons.org/licenses/by-sa/3.0","page_url":"https://commons.wikimedia.org/wiki/File:Columba_palumbus_1_(Marek_Szczepanek).jpg"},{"author":"alexislours","license":"CC BY 2.0","license_url":"https://creativecommons.org/licenses/by/2.0","page_url":"https://commons.wikimedia.org/wiki/File:Close-up_picture_of_a_common_wood_pigeon.jpg"}],"sounds":[{"author":"Sleepytomcat (Jens Kraglund)","license":"Public domain","license_url":"","page_url":"https://commons.wikimedia.org/wiki/File:Ringeltaube_(ruft).ogg"},{"author":"Alexander Kurthy","license":"CC BY-SA 4.0","license_url":"https://creativecommons.org/licenses/by-sa/4.0","page_url":"https://commons.wikimedia.org/wiki/File:Columba_palumbus_-_Common_Wood_Pigeon_XC108354.mp3"}]},"pimpelmees":{"images":[{"author":"Francis Franklin","license":"CC BY-SA 4.0","license_url":"https://creativecommons.org/licenses/by-sa/4.0","page_url":"https://commons.wikimedia.org/wiki/File:Eurasian_blue_tit_Lancashire_2.jpg"},{"author":"color line","license":"CC BY 2.0","license_url":"https://creativecommons.org/licenses/by/2.0","page_url":"https://commons.wikimedia.org/wiki/File:Blue_tit_on_feeder.jpg"},{"author":"Francis Franklin","license":"CC BY-SA 4.0","license_url":"https://creativecommons.org/licenses/by-sa/4.0","page_url":"https://commons.wikimedia.org/wiki/File:Blue_tit_three-quarter_close-up_4.jpg"}],"sounds":[{"author":"Dan Stowell","license":"CC BY-SA 3.0","license_url":"https://creativecommons.org/licenses/by-sa/3.0","page_url":"https://commons.wikimedia.org/wiki/File:Cyanistes_caeruleus_-_Eurasian_Blue_Tit_XC125793.ogg"},{"author":"onbekend","license":"CC BY-SA 4.0","license_url":"https://creativecommons.org/licenses/by-sa/4.0","page_url":"https://commons.wikimedia.org/wiki/File:Blue_Tit_(Cyanistes_caeruleus)_(W1CDR0001535_BD30).ogg"}]},"tjiftjaf":{"images":[{"author":"Andreas Trepte","license":"CC BY-SA 2.5","license_url":"https://creativecommons.org/licenses/by-sa/2.5","page_url":"https://commons.wikimedia.org/wiki/File:Chiffchaff_-_Phylloscopus_collybita.jpg"},{"author":"א (Aleph)","license":"CC BY-SA 2.5","license_url":"https://creativecommons.org/licenses/by-sa/2.5","page_url":"https://commons.wikimedia.org/wiki/File:Chiffchaff_(Phylloscopus_collybita).jpg"}],"sounds":[{"author":"Dan Stowell","license":"CC BY-SA 3.0","license_url":"https://creativecommons.org/licenses/by-sa/3.0","page_url":"https://commons.wikimedia.org/wiki/File:Phylloscopus_collybita_-_Common_Chiffchaff_XC125867.ogg"},{"author":"onbekend","license":"CC BY-SA 4.0","license_url":"https://creativecommons.org/licenses/by-sa/4.0","page_url":"https://commons.wikimedia.org/wiki/File:Chiffchaff_(Phylloscopus_collybita)_(W1CDR0001497_BD9).ogg"}]},"winterkoning":{"images":[{"author":"Alpsdake","license":"CC BY-SA 3.0","license_url":"https://creativecommons.org/licenses/by-sa/3.0","page_url":"https://commons.wikimedia.org/wiki/File:Troglodytes_troglodytes_fumigatus.JPG"},{"author":"Andreas Trepte","license":"CC BY-SA 2.5","license_url":"https://creativecommons.org/licenses/by-sa/2.5","page_url":"https://commons.wikimedia.org/wiki/File:Eurasian-Wren-Troglodytes-troglodytes.jpg"},{"author":"Andreas Eichler","license":"CC BY-SA 4.0","license_url":"https://creativecommons.org/licenses/by-sa/4.0","page_url":"https://commons.wikimedia.org/wiki/File:2016.07.19.-23-Westensee_Felde--Zaunkoenig.jpg"}],"sounds":[{"author":"onbekend","license":"CC BY-SA 4.0","license_url":"https://creativecommons.org/licenses/by-sa/4.0","page_url":"https://commons.wikimedia.org/wiki/File:Eurasian_Wren_(Troglodytes_troglodytes)_(W1CDR0001461_BD5).ogg"},{"author":"Grantus4504","license":"CC BY-SA 3.0","license_url":"https://creativecommons.org/licenses/by-sa/3.0","page_url":"https://commons.wikimedia.org/wiki/File:Troglodytes_troglodytes_song.ogg"}]},"groenling":{"images":[{"author":"Miroslav Dudok","license":"CC BY-SA 4.0","license_url":"https://creativecommons.org/licenses/by-sa/4.0","page_url":"https://commons.wikimedia.org/wiki/File:Greenfinch_(Chloris_chloris)_Zelentarka.jpg"},{"author":"Charles J. Sharp","license":"CC BY-SA 4.0","license_url":"https://creativecommons.org/licenses/by-sa/4.0","page_url":"https://commons.wikimedia.org/wiki/File:European_greenfinch_(Chloris_chloris_voousi)_male.jpg"},{"author":"Francis C. Franklin","license":"CC BY-SA 3.0","license_url":"https://creativecommons.org/licenses/by-sa/3.0","page_url":"https://commons.wikimedia.org/wiki/File:Chloris_chloris.jpg"}],"sounds":[{"author":"Vladimir Yu. Arkhipov, Arkhivov","license":"CC BY-SA 3.0","license_url":"https://creativecommons.org/licenses/by-sa/3.0","page_url":"https://commons.wikimedia.org/wiki/File:Carduelis_chloris.ogg"}]},"kievit":{"images":[{"author":"Alpsdake","license":"CC BY-SA 3.0","license_url":"https://creativecommons.org/licenses/by-sa/3.0","page_url":"https://commons.wikimedia.org/wiki/File:Vanellus_vanellus_001.JPG"},{"author":"Andreas Eichler","license":"CC BY-SA 4.0","license_url":"https://creativecommons.org/licenses/by-sa/4.0","page_url":"https://commons.wikimedia.org/wiki/File:2018.09.10.-06-Lac_du_Der_Chantecoq-Giffaumont-Champaubert--Kiebitz.jpg"}],"sounds":[{"author":"Joost van Bruggen","license":"CC BY-SA 4.0","license_url":"https://creativecommons.org/licenses/by-sa/4.0","page_url":"https://commons.wikimedia.org/wiki/File:Vanellus_vanellus_-_Northern_Lapwing_XC436942.mp3"},{"author":"onbekend","license":"CC BY-SA 4.0","license_url":"https://creativecommons.org/licenses/by-sa/4.0","page_url":"https://commons.wikimedia.org/wiki/File:Northern_Lapwing_(Vanellus_vanellus)_(W1CDR0001471_BD4).ogg"}]},"ekster":{"images":[{"author":"Ealdgyth","license":"CC BY-SA 3.0","license_url":"https://creativecommons.org/licenses/by-sa/3.0","page_url":"https://commons.wikimedia.org/wiki/File:Commonmagpiewalking.jpg"},{"author":"Maret Hosemann","license":"CC BY 2.0","license_url":"https://creativecommons.org/licenses/by/2.0","page_url":"https://commons.wikimedia.org/wiki/File:Pica_pica_on_roof_top.jpg"}],"sounds":[{"author":"onbekend","license":"CC BY-SA 4.0","license_url":"https://creativecommons.org/licenses/by-sa/4.0","page_url":"https://commons.wikimedia.org/wiki/File:Eurasian_Magpie_(Pica_pica)_(W1CDR0001537_BD28).ogg"},{"author":"Oona Räisänen (Mysid)","license":"Public domain","license_url":"","page_url":"https://commons.wikimedia.org/wiki/File:Pica_pica.ogg"}]},"kraai":{"images":[{"author":"Richard Bartz","license":"CC BY-SA 2.5","license_url":"https://creativecommons.org/licenses/by-sa/2.5","page_url":"https://commons.wikimedia.org/wiki/File:Rabenkr%C3%A4he_Corvus_corone_Richard_Bartz.jpg"},{"author":"Loz (L. B. Tettenborn)","license":"CC BY-SA 3.0","license_url":"https://creativecommons.org/licenses/by-sa/3.0","page_url":"https://commons.wikimedia.org/wiki/File:Kr%C3%A4he_65(loz).JPG"},{"author":"Adam Kumiszcza","license":"CC BY-SA 3.0","license_url":"https://creativecommons.org/licenses/by-sa/3.0","page_url":"https://commons.wikimedia.org/wiki/File:Corvus_corone_20070813.jpg"}],"sounds":[{"author":"onbekend","license":"CC BY-SA 4.0","license_url":"https://creativecommons.org/licenses/by-sa/4.0","page_url":"https://commons.wikimedia.org/wiki/File:Carrion_Crow_(Corvus_corone)_(W1CDR0001425_BD18).ogg"},{"author":"Marie-Lan Taÿ Pamart","license":"CC BY-SA 4.0","license_url":"https://creativecommons.org/licenses/by-sa/4.0","page_url":"https://commons.wikimedia.org/wiki/File:Corvus_corone_-_Carrion_Crow_XC461980.mp3"},{"author":"Marie-Lan Taÿ Pamart","license":"CC BY-SA 4.0","license_url":"https://creativecommons.org/licenses/by-sa/4.0","page_url":"https://commons.wikimedia.org/wiki/File:Corvus_corone_-_Carrion_Crow_XC466390.mp3"}]},"gaai":{"images":[{"author":"Luc Viatour","license":"CC BY-SA 3.0","license_url":"https://creativecommons.org/licenses/by-sa/3.0","page_url":"https://commons.wikimedia.org/wiki/File:Garrulus_glandarius_1_Luc_Viatour.jpg"},{"author":"Luc Viatour","license":"CC BY-SA 3.0","license_url":"https://creativecommons.org/licenses/by-sa/3.0","page_url":"https://commons.wikimedia.org/wiki/File:Garrulus_glandarius_B_Luc_Viatour.jpg"},{"author":"Andreas Eichler","license":"CC BY-SA 4.0","license_url":"https://creativecommons.org/licenses/by-sa/4.0","page_url":"https://commons.wikimedia.org/wiki/File:2018.05.19.-18-Bad_Salzungen--Eichelhaeher.jpg"}],"sounds":[{"author":"Vladimir Yu. Arkhipov, Arkhivov","license":"CC BY-SA 3.0","license_url":"https://creativecommons.org/licenses/by-sa/3.0","page_url":"https://commons.wikimedia.org/wiki/File:Garrulus_glandarius_iphigenia.ogg"}]},"wilde-eend":{"images":[{"author":"Richard Bartz","license":"CC BY-SA 2.5","license_url":"https://creativecommons.org/licenses/by-sa/2.5","page_url":"https://commons.wikimedia.org/wiki/File:Anas_platyrhynchos_male_female.jpg"},{"author":"Acarpentier","license":"CC BY 3.0","license_url":"https://creativecommons.org/licenses/by/3.0","page_url":"https://commons.wikimedia.org/wiki/File:Male_mallard_duck_2.jpg"},{"author":"Calibas / Aqwis","license":"CC BY-SA 3.0","license_url":"https://creativecommons.org/licenses/by-sa/3.0","page_url":"https://commons.wikimedia.org/wiki/File:Male_mallard3.jpg"},{"author":"Cephas","license":"CC BY-SA 3.0","license_url":"https://creativecommons.org/licenses/by-sa/3.0","page_url":"https://commons.wikimedia.org/wiki/File:Anas_platyrhynchos_portrait.jpg"}],"sounds":[{"author":"Jonathon Jongsma","license":"CC BY-SA 3.0","license_url":"https://creativecommons.org/licenses/by-sa/3.0","page_url":"https://commons.wikimedia.org/wiki/File:Anas_platyrhynchos_-_Mallard_-_XC62258.ogg"}]},"boerenzwaluw":{"images":[{"author":"Andreas Eichler","license":"CC BY-SA 4.0","license_url":"https://creativecommons.org/licenses/by-sa/4.0","page_url":"https://commons.wikimedia.org/wiki/File:2013.06.23.-12-Wesenberg-Rauchschwalbe.jpg"},{"author":"Jörg Hempel","license":"CC BY-SA 3.0 de","license_url":"https://creativecommons.org/licenses/by-sa/3.0/de/deed.en","page_url":"https://commons.wikimedia.org/wiki/File:Hirundo_rustica_LC0200.jpg"}],"sounds":[{"author":"Jonathon Jongsma","license":"CC BY-SA 3.0","license_url":"https://creativecommons.org/licenses/by-sa/3.0","page_url":"https://commons.wikimedia.org/wiki/File:Hirundo_rustica_-_Barn_Swallow_-_XC83449.ogg"}]},"gierzwaluw":{"images":[{"author":"Stiopa","license":"CC BY-SA 4.0","license_url":"https://creativecommons.org/licenses/by-sa/4.0","page_url":"https://commons.wikimedia.org/wiki/File:Apus_apus.jpg"},{"author":"Paweł Kuźniar","license":"CC BY-SA 3.0","license_url":"https://creativecommons.org/licenses/by-sa/3.0","page_url":"https://commons.wikimedia.org/wiki/File:Apus_apus_01.jpg"}],"sounds":[{"author":"Jugrü","license":"CC BY-SA 3.0","license_url":"https://creativecommons.org/licenses/by-sa/3.0","page_url":"https://commons.wikimedia.org/wiki/File:Mauersegler.ogg"}]},"koekoek":{"images":[{"author":"Tim Peukert","license":"CC BY-SA 3.0","license_url":"https://creativecommons.org/licenses/by-sa/3.0","page_url":"https://commons.wikimedia.org/wiki/File:Kuckuck_(Cuculus_canorus)_by_Tim_Peukert.jpg"},{"author":"Vogelartinfo","license":"GFDL 1.2","license_url":"http://www.gnu.org/licenses/old-licenses/fdl-1.2.html","page_url":"https://commons.wikimedia.org/wiki/File:Cuculus_canorus_(cropped).jpg"}],"sounds":[{"author":"Vladimir Yu. Arkhipov, Arkhivov","license":"CC BY-SA 3.0","license_url":"https://creativecommons.org/licenses/by-sa/3.0","page_url":"https://commons.wikimedia.org/wiki/File:Cuculus_canorus.ogg"}]},"nachtegaal":{"images":[{"author":"J. Dietrich / Bogbumper","license":"CC BY-SA 3.0","license_url":"https://creativecommons.org/licenses/by-sa/3.0","page_url":"https://commons.wikimedia.org/wiki/File:Nachtigall_(Luscinia_megarhynchos)-2.jpg"},{"author":"Frebeck","license":"CC BY-SA 3.0","license_url":"https://creativecommons.org/licenses/by-sa/3.0","page_url":"https://commons.wikimedia.org/wiki/File:Nachtigall_singend_Stromkabel.jpg"},{"author":"Noel Reynolds","license":"CC BY 2.0","license_url":"https://creativecommons.org/licenses/by/2.0","page_url":"https://commons.wikimedia.org/wiki/File:Luscinia_megarhynchos_Ticino.jpg"}],"sounds":[{"author":"onbekend","license":"CC BY-SA 4.0","license_url":"https://creativecommons.org/licenses/by-sa/4.0","page_url":"https://commons.wikimedia.org/wiki/File:Common_Nightingale_(Luscinia_megarhynchos)_(W1CDR0001376_BD18).ogg"},{"author":"Guido Gerding","license":"CC BY-SA 3.0","license_url":"https://creativecommons.org/licenses/by-sa/3.0","page_url":"https://commons.wikimedia.org/wiki/File:XN_Luscinia_megarhynchos_017.ogg"}]},"gr-bonte-specht":{"images":[{"author":"Mindaugas Urbonas","license":"CC BY-SA 2.5","license_url":"https://creativecommons.org/licenses/by-sa/2.5","page_url":"https://commons.wikimedia.org/wiki/File:Great_Spotted_Woodpecker-Mindaugas_Urbonas.jpg"},{"author":"Andreas Eichler","license":"CC BY-SA 4.0","license_url":"https://creativecommons.org/licenses/by-sa/4.0","page_url":"https://commons.wikimedia.org/wiki/File:2015.05.08.-04-Kaefertaler_Wald-Mannheim--Buntspecht-Weibchen.jpg"}],"sounds":[{"author":"Sander Pieterse","license":"CC BY-SA 4.0","license_url":"https://creativecommons.org/licenses/by-sa/4.0","page_url":"https://commons.wikimedia.org/wiki/File:XC47350_-_Grote_Bonte_Specht_-_Dendrocopos_major.ogg"},{"author":"onbekend","license":"CC BY-SA 4.0","license_url":"https://creativecommons.org/licenses/by-sa/4.0","page_url":"https://commons.wikimedia.org/wiki/File:Great_Spotted_Woodpecker_(Picoides_major)_(W1CDR0001405_BD15).ogg"}]}};
+
+function openCredits() {
+  const body = document.getElementById("credits-body");
+  if (!body.hasChildNodes()) {
+    const BIRD_NAMES = {
+      "merel":"Merel","koolmees":"Koolmees","roodborst":"Roodborst","kauw":"Kauw",
+      "spreeuw":"Spreeuw","huismus":"Huismus","vink":"Vink","houtduif":"Houtduif",
+      "pimpelmees":"Pimpelmees","tjiftjaf":"Tjiftjaf","winterkoning":"Winterkoning",
+      "groenling":"Groenling","kievit":"Kievit","ekster":"Ekster","kraai":"Kraai",
+      "gaai":"Gaai","wilde-eend":"Wilde eend","boerenzwaluw":"Boerenzwaluw",
+      "gierzwaluw":"Gierzwaluw","koekoek":"Koekoek","nachtegaal":"Nachtegaal",
+      "gr-bonte-specht":"Grote bonte specht"
+    };
+    let html = "";
+    for (const [id, data] of Object.entries(CREDITS_NL)) {
+      html += `<div class="cr-bird"><div class="cr-bird-name">${BIRD_NAMES[id] || id}</div>`;
+      data.images.forEach(item => {
+        const lic = item.license_url
+          ? `<a href="${item.license_url}" target="_blank">${item.license}</a>`
+          : item.license;
+        html += `<div class="cr-item"><span class="cr-type">📷</span><span>${item.author} · ${lic} · <a href="${item.page_url}" target="_blank">Wikimedia</a></span></div>`;
+      });
+      data.sounds.forEach(item => {
+        const lic = item.license_url
+          ? `<a href="${item.license_url}" target="_blank">${item.license}</a>`
+          : item.license;
+        html += `<div class="cr-item"><span class="cr-type">🔊</span><span>${item.author} · ${lic} · <a href="${item.page_url}" target="_blank">Wikimedia</a></span></div>`;
+      });
+      html += `</div>`;
+    }
+    body.innerHTML = html;
+  }
+  document.getElementById("credits-overlay").classList.remove("hidden");
+}
+
+function closeCredits() {
+  document.getElementById("credits-overlay").classList.add("hidden");
 }
 
 /* ============================================================
