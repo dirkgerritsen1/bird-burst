@@ -1,737 +1,1323 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html lang="nl">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Dirk Gerritsen — Associate Professor of Finance, Utrecht University</title>
-  <meta name="description" content="Dirk Gerritsen is Associate Professor of Finance at Utrecht University. He studies behavioral finance, sustainable investing, security analysts, and the financial decisions of retail investors." />
-  <meta name="author" content="Dirk Gerritsen" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>Bird Burst</title>
 
-  <meta property="og:title" content="Dirk Gerritsen — Associate Professor of Finance, Utrecht University" />
-  <meta property="og:description" content="Behavioral finance, sustainable investing, and the economics of financial advice." />
-  <meta property="og:type" content="website" />
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#d4683a">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Bird Burst">
+  <!-- Icons (maak aan: icons/icon-192.png en icons/icon-512.png) -->
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <style>
+    /* ── reset ──────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23FFCD00'/%3E%3Ctext x='32' y='44' font-family='Georgia,serif' font-size='40' font-weight='700' text-anchor='middle' fill='%23000'%3EG%3C/text%3E%3C/svg%3E" />
+    html, body {
+      width: 100%; height: 100%;
+      overflow: hidden;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(150deg, #fef6e4 0%, #fdebd0 50%, #fce4c8 100%);
+      padding-top:    env(safe-area-inset-top);
+      padding-bottom: env(safe-area-inset-bottom);
+      padding-left:   env(safe-area-inset-left);
+      padding-right:  env(safe-area-inset-right);
+    }
 
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+    /* ── screens ─────────────────────────────────────────────── */
+    .screen {
+      position: absolute; inset: 0;
+      display: flex; align-items: center; justify-content: center;
+      transition: opacity .22s;
+    }
+    .screen.hidden { opacity: 0; pointer-events: none; }
 
-  <link rel="stylesheet" href="css/styles.css" />
+    /* ══════════════════════════════════════════════════════════
+       SETUP SCREEN
+    ══════════════════════════════════════════════════════════ */
+    .setup-box {
+      background: linear-gradient(170deg, #fef6e4 0%, #ffffff 55%, #fdebd0 100%);
+      border-radius: 24px;
+      padding: 28px 32px;
+      box-shadow: 0 10px 40px rgba(120,70,20,.2), 0 2px 8px rgba(0,0,0,.08);
+      width: min(520px, 94vw);
+      max-height: 92vh;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      border: 2px solid rgba(255,255,255,.6);
+    }
+
+    .setup-title {
+      color: #8a3a10; font-size: 1.65em;
+      text-align: center; margin-bottom: 3px;
+    }
+    .setup-subtitle {
+      color: #7a5c3a; text-align: center;
+      font-size: 0.86em; margin-bottom: 22px;
+    }
+
+    .section-label {
+      font-size: 0.78em; font-weight: 700; color: #8a6030;
+      text-transform: uppercase; letter-spacing: .06em;
+      margin-bottom: 9px;
+    }
+
+    /* ── country grid ── */
+    .country-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+      gap: 6px;
+      margin-bottom: 22px;
+      max-height: 260px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      padding-right: 2px;
+    }
+
+    .country-btn {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 3px; padding: 8px 4px;
+      border: 2px solid #e8c89a;
+      border-radius: 12px; background: white;
+      cursor: pointer; transition: all .18s;
+      font-size: 0.78em; text-align: center; line-height: 1.2;
+      min-height: 60px;
+    }
+    .country-btn .flag { font-size: 1.7em; line-height: 1; }
+    .country-btn .cname { color: #7a5c3a; }
+
+    .country-btn.active {
+      border-color: #d4683a; background: #fef0e4;
+      box-shadow: 0 0 0 2px #d4683a;
+    }
+    .country-btn.active .cname { color: #8a3a10; font-weight: 700; }
+
+    .country-btn.unavailable {
+      opacity: .3; cursor: not-allowed;
+      background: #f5f5f5;
+    }
+
+    /* ── player count ── */
+    .count-row {
+      display: flex; gap: 9px;
+      justify-content: center; margin-bottom: 18px;
+    }
+    .count-btn {
+      width: 44px; height: 44px;
+      border: 2px solid #e8c89a; border-radius: 50%;
+      background: white; font-size: 1.05em; color: #7a5c3a;
+      cursor: pointer; transition: all .16s;
+    }
+    .count-btn.active {
+      border-color: #d4683a; background: #d4683a; color: white;
+      box-shadow: 0 2px 8px rgba(212,104,58,.4);
+    }
+
+    /* ── name inputs ── */
+    .player-inputs { display: flex; flex-direction: column; gap: 8px; margin-bottom: 22px; }
+    .player-row { display: flex; align-items: center; gap: 10px; }
+    .player-row label {
+      width: 96px; flex-shrink: 0;
+      font-size: 0.82em; font-weight: 600; color: #7a5c3a;
+    }
+    .player-row input {
+      flex: 1; padding: 7px 11px;
+      border: 1.5px solid #e8c89a; border-radius: 8px;
+      font-size: 0.91em; outline: none; transition: border-color .14s;
+    }
+    .player-row input:focus { border-color: #d4683a; }
+
+    .start-btn {
+      width: 100%; padding: 12px;
+      background: linear-gradient(135deg, #d4683a, #a03018);
+      color: white; font-weight: 700;
+      border: none; border-radius: 14px;
+      font-size: 1.05em; cursor: pointer;
+      transition: all .18s;
+      box-shadow: 0 4px 12px rgba(160,48,24,.3);
+    }
+    .start-btn:hover { background: linear-gradient(135deg, #c85a2e, #8a2810); transform: translateY(-1px); }
+
+    /* ══════════════════════════════════════════════════════════
+       GAME SCREEN
+    ══════════════════════════════════════════════════════════ */
+    #game-screen { flex-direction: column; align-items: stretch; }
+
+    .scorebar {
+      flex-shrink: 0;
+      display: flex; align-items: center;
+      justify-content: space-between;
+      padding: 6px 14px; gap: 8px;
+      background: linear-gradient(90deg, rgba(254,246,228,.9), rgba(253,235,208,.9));
+      backdrop-filter: blur(6px);
+      border-bottom: 2px solid rgba(212,104,58,.2);
+      flex-wrap: wrap;
+    }
+
+    #scores { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    .player-score {
+      display: flex; flex-direction: column; align-items: center;
+      padding: 4px 14px; border-radius: 20px;
+      background: rgba(255,255,255,.7);
+      border: 2px solid #e8c89a;
+      transition: all .26s; min-width: 66px;
+    }
+    .player-score.active {
+      background: linear-gradient(135deg, #d4683a, #a03018); color: white;
+      border-color: #8a3a10;
+      box-shadow: 0 2px 10px rgba(212,104,58,.45);
+    }
+    .player-score .p-name  { font-size: 0.74em; font-weight: 600; white-space: nowrap; }
+    .player-score .p-score { font-size: 1.2em; font-weight: 700; }
+
+    .scorebar-right { display: flex; align-items: center; gap: 10px; }
+    #pairs-left { font-size: 0.82em; color: #7a5c3a; }
+    .menu-btn {
+      padding: 5px 13px; border-radius: 16px;
+      border: none; background: #fef0e4; color: #8a3a10;
+      cursor: pointer; font-size: 0.83em; font-weight: 600;
+      transition: all .16s;
+    }
+    .menu-btn:hover { background: #fde0c8; }
+
+    .grid-wrapper {
+      flex: 1; overflow: hidden;
+      padding: 10px;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      grid-template-rows: repeat(5, 1fr);
+      gap: 6px;
+      width: 100%; height: 100%;
+      max-width: 1100px;
+    }
+
+    /* ── cards ──────────────────────────────────────────────── */
+    .card { cursor: pointer; perspective: 900px; user-select: none; }
+
+    .card-inner {
+      width: 100%; height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform .42s cubic-bezier(.4,0,.2,1);
+      border-radius: 10px;
+    }
+    .card.flipped .card-inner,
+    .card.matched .card-inner { transform: rotateY(180deg); }
+
+    .card-face {
+      position: absolute; inset: 0;
+      backface-visibility: hidden;
+      border-radius: 12px; overflow: hidden;
+      box-shadow: 0 3px 12px rgba(120,70,20,.22);
+    }
+
+    .card-back {
+      background: linear-gradient(160deg, #fef6e4 0%, #fdebd0 100%);
+      overflow: hidden;
+    }
+    .card-back svg {
+      width: 100%; height: 100%; display: block;
+    }
+
+    .card-front {
+      transform: rotateY(180deg);
+      display: flex; flex-direction: column; align-items: center;
+    }
+
+    .image-card img {
+      flex: 1; width: 100%; object-fit: cover; min-height: 0;
+      transition: opacity .3s;
+    }
+    .image-card img.loading { opacity: 0; }
+    .image-card img.loaded  { opacity: 1; }
+    .image-card .no-img {
+      flex: 1; width: 100%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: clamp(1.5em, 3vw, 2.5em);
+    }
+
+    .card-label {
+      width: 100%; padding: 5px 4px; flex-shrink: 0;
+      text-align: center; font-weight: 700;
+      font-size: clamp(0.58em, 1.1vw, 0.82em);
+      background: rgba(138,96,48,.12); color: #5a3810;
+    }
+
+    .sound-card { justify-content: flex-end; }
+    .sound-card .speaker {
+      flex: 1;
+      display: flex; align-items: center; justify-content: center;
+      transition: transform .15s;
+      padding: 4px;
+    }
+    .sound-card .speaker svg { display: block; }
+    .sound-card.playing .speaker { transform: scale(1.1); }
+
+    @keyframes cardPop {
+      0%   { transform: rotateY(180deg) scale(1);    opacity: 1; }
+      40%  { transform: rotateY(180deg) scale(1.07); opacity: 1; }
+      100% { transform: rotateY(180deg) scale(0);    opacity: 0; }
+    }
+    .card.disappearing .card-inner { animation: cardPop .5s ease-in forwards; }
+    .card.gone { visibility: hidden; cursor: default; }
+
+    /* ══════════════════════════════════════════════════════════
+       PAUSE OVERLAY  (sits on top of game screen)
+    ══════════════════════════════════════════════════════════ */
+    #pause-overlay {
+      position: absolute; inset: 0;
+      background: rgba(60,35,10,.55);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 5;
+      transition: opacity .2s;
+    }
+    #pause-overlay.hidden { opacity: 0; pointer-events: none; }
+
+    .pause-box {
+      background: linear-gradient(170deg, #fef6e4, #ffffff, #fdebd0);
+      border-radius: 22px;
+      padding: 34px 44px; text-align: center;
+      box-shadow: 0 12px 40px rgba(120,70,20,.3);
+      min-width: 240px;
+      border: 2px solid rgba(255,255,255,.6);
+    }
+    .pause-box h2 { font-size: 1.5em; color: #8a3a10; margin-bottom: 6px; }
+    .pause-box p  { color: #7a5c3a; font-size: 0.88em; margin-bottom: 24px; }
+
+    .pause-btns { display: flex; flex-direction: column; gap: 10px; }
+    .pause-btn {
+      padding: 11px 20px; border: none; border-radius: 12px;
+      font-size: 0.97em; font-weight: 600; cursor: pointer; transition: all .16s;
+    }
+    .pause-btn.primary   { background: linear-gradient(135deg, #6a9a40, #3a6a18); color: white; box-shadow: 0 2px 8px rgba(90,140,40,.3); }
+    .pause-btn.primary:hover { transform: translateY(-1px); }
+    .pause-btn.secondary { background: #fdebd0; color: #7a5c3a; }
+    .pause-btn.secondary:hover { background: #fce4c8; }
+
+    /* ══════════════════════════════════════════════════════════
+       WIN SCREEN
+    ══════════════════════════════════════════════════════════ */
+    #win-screen { background: rgba(60,35,10,.5); z-index: 10; }
+
+    .win-box {
+      background: linear-gradient(170deg, #fef6e4, #ffffff, #fdebd0);
+      border-radius: 24px;
+      padding: 34px 46px; text-align: center;
+      box-shadow: 0 14px 45px rgba(120,70,20,.35);
+      max-width: 360px; width: 90vw;
+      border: 2px solid rgba(255,255,255,.6);
+    }
+    .win-box h2 { font-size: 1.75em; color: #8a3a10; margin-bottom: 16px; }
+
+    .result-table {
+      width: 100%; border-collapse: collapse; margin-bottom: 20px;
+    }
+    .result-table th {
+      color: #8a6030; font-weight: 600; font-size: 0.8em;
+      padding: 3px 10px; border-bottom: 2px solid #e8c89a;
+    }
+    .result-table td { padding: 7px 10px; font-size: 0.95em; color: #3a2010; }
+    .result-table tr.winner td { font-weight: 700; color: #8a3a10; font-size: 1.05em; }
+
+    .win-btns { display: flex; flex-direction: column; gap: 9px; }
+    .win-btn {
+      padding: 10px 28px; border: none; border-radius: 12px;
+      font-size: 0.96em; font-weight: 600; cursor: pointer; transition: all .18s;
+    }
+    .win-btn.primary   { background: linear-gradient(135deg, #d4683a, #a03018); color: white; box-shadow: 0 3px 10px rgba(160,48,24,.3); }
+    .win-btn.primary:hover { transform: translateY(-1px); }
+    .win-btn.secondary { background: #fdebd0; color: #7a5c3a; }
+    .win-btn.secondary:hover { background: #fce4c8; }
+  </style>
 </head>
 <body>
 
-  <!-- ===== NAV ===== -->
-  <header class="nav" role="banner">
-    <div class="nav__inner">
-      <a class="nav__brand" href="#top" aria-label="Dirk Gerritsen — home">
-        <span class="nav__mark" aria-hidden="true">
-          <svg viewBox="0 0 40 40" width="28" height="28">
-            <g class="sunburst-mini">
-              <circle cx="20" cy="20" r="19" fill="#0C0C0C"/>
-              <g fill="#FFCD00">
-                <!-- 16 rays -->
-                <rect x="19" y="3" width="2" height="14"/>
-                <rect x="19" y="23" width="2" height="14"/>
-                <rect x="3" y="19" width="14" height="2"/>
-                <rect x="23" y="19" width="14" height="2"/>
-                <rect x="19" y="3" width="2" height="14" transform="rotate(45 20 20)"/>
-                <rect x="19" y="23" width="2" height="14" transform="rotate(45 20 20)"/>
-                <rect x="3" y="19" width="14" height="2" transform="rotate(45 20 20)"/>
-                <rect x="23" y="19" width="14" height="2" transform="rotate(45 20 20)"/>
-                <rect x="19" y="3" width="2" height="14" transform="rotate(22.5 20 20)"/>
-                <rect x="19" y="23" width="2" height="14" transform="rotate(22.5 20 20)"/>
-                <rect x="3" y="19" width="14" height="2" transform="rotate(22.5 20 20)"/>
-                <rect x="23" y="19" width="14" height="2" transform="rotate(22.5 20 20)"/>
-                <rect x="19" y="3" width="2" height="14" transform="rotate(67.5 20 20)"/>
-                <rect x="19" y="23" width="2" height="14" transform="rotate(67.5 20 20)"/>
-                <rect x="3" y="19" width="14" height="2" transform="rotate(67.5 20 20)"/>
-                <rect x="23" y="19" width="14" height="2" transform="rotate(67.5 20 20)"/>
-              </g>
-              <rect x="16" y="14" width="8" height="11" rx="1" fill="#FAF8F2"/>
-              <path d="M16 14 L20 14 L20 19 Z" fill="#C00A35"/>
-            </g>
-          </svg>
-        </span>
-        <span class="nav__brand-text"><b>D.</b> Gerritsen</span>
-      </a>
+<!-- ══ SETUP SCREEN ══════════════════════════════════════════ -->
+<div id="setup-screen" class="screen">
+  <div class="setup-box">
+    <h1 class="setup-title">🐦 Bird Burst</h1>
+    <p class="setup-subtitle">Leer vogelgeluiden spelenderwijs</p>
 
-      <nav class="nav__links" aria-label="Primary">
-        <a href="#research">Research</a>
-        <a href="#publications">Publications</a>
-        <a href="#teaching">Teaching</a>
-        <a href="#press">Press</a>
-        <a href="#speaking">Speaking</a>
-        <a href="#contact" class="nav__cta">Contact</a>
-      </nav>
+    <p class="section-label">Kies een land</p>
+    <div class="country-grid" id="country-grid"></div>
 
-      <button class="nav__menu" aria-label="Menu" aria-expanded="false">
-        <span></span><span></span><span></span>
-      </button>
+    <p class="section-label">Aantal deelnemers</p>
+    <div class="count-row" id="count-row"></div>
+
+    <p class="section-label" id="names-label">Namen</p>
+    <div class="player-inputs" id="player-inputs"></div>
+
+    <button class="start-btn" onclick="startGame()">Spelen ▶</button>
+  </div>
+</div>
+
+<!-- ══ GAME SCREEN ═══════════════════════════════════════════ -->
+<div id="game-screen" class="screen hidden">
+  <div class="scorebar">
+    <div id="scores"></div>
+    <div class="scorebar-right">
+      <span id="pairs-left"></span>
+      <button class="menu-btn" onclick="openPause()">☰ Menu</button>
     </div>
-  </header>
+  </div>
+  <div class="grid-wrapper">
+    <div class="grid" id="grid"></div>
+  </div>
 
-  <!-- ===== HERO ===== -->
-  <section id="top" class="hero">
-    <!-- Sunburst background -->
-    <div class="hero__sun" aria-hidden="true">
-      <svg viewBox="0 0 800 800" width="100%" height="100%">
-        <defs>
-          <radialGradient id="sunfade" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stop-color="#FFCD00" stop-opacity="0.35"/>
-            <stop offset="60%" stop-color="#FFCD00" stop-opacity="0.08"/>
-            <stop offset="100%" stop-color="#FFCD00" stop-opacity="0"/>
-          </radialGradient>
-        </defs>
-        <circle cx="400" cy="400" r="380" fill="url(#sunfade)"/>
-        <g class="hero__sun-rays" stroke="#FFCD00" stroke-width="2" stroke-linecap="round">
-          <!-- 36 rays -->
-        </g>
-      </svg>
-    </div>
-
-    <div class="hero__grain" aria-hidden="true"></div>
-
-    <div class="hero__inner">
-      <div class="hero__eyebrow reveal">
-        <span class="dot"></span>
-        Utrecht University — School of Economics
-      </div>
-
-      <h1 class="hero__title reveal">
-        <span class="hero__first">Dirk</span>
-        <span class="hero__last">Gerritsen<em class="hero__period">.</em></span>
-      </h1>
-
-      <p class="hero__role reveal">
-        Associate Professor of <em>Finance</em>
-      </p>
-
-      <p class="hero__lede reveal">
-        I study how investors form beliefs — the analysts they listen to,
-        the influencers they follow, the ESG signals they price, and the
-        biases that quietly bend their portfolios. My work sits where
-        <span class="hl">behavioral finance</span>,
-        <span class="hl">sustainable investing</span>, and
-        <span class="hl">retail decision-making</span> meet the data.
-      </p>
-
-      <div class="hero__meta reveal">
-        <div class="hero__meta-item">
-          <span class="hero__meta-k">Based in</span>
-          <span class="hero__meta-v">Utrecht, NL</span>
-        </div>
-        <div class="hero__meta-item">
-          <span class="hero__meta-k">PhD</span>
-          <span class="hero__meta-v">Economics, 2014</span>
-        </div>
-        <div class="hero__meta-item">
-          <span class="hero__meta-k">Group</span>
-          <span class="hero__meta-v"><a href="https://www.linkedin.com/company/finance-utrecht" target="_blank" rel="noopener">Finance @ U.U.</a></span>
-        </div>
-        <div class="hero__meta-item">
-          <span class="hero__meta-k">Status</span>
-          <span class="hero__meta-v">Open to collaboration</span>
-        </div>
-      </div>
-
-      <div class="hero__cta reveal">
-        <a href="#research" class="btn btn--primary">
-          <span>See the research</span>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-        </a>
-        <a href="mailto:d.f.gerritsen@uu.nl" class="btn btn--ghost">
-          d.f.gerritsen@uu.nl
-        </a>
-        <a href="Curriculum vitae.pdf" class="btn btn--ghost" download>
-          <span>Download CV</span>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
-        </a>
+  <!-- Pause overlay — lives inside game screen so game stays rendered -->
+  <div id="pause-overlay" class="hidden">
+    <div class="pause-box">
+      <h2>⏸ Gepauzeerd</h2>
+      <p id="pause-info"></p>
+      <div class="pause-btns">
+        <button class="pause-btn primary"   onclick="closePause()">▶ Doorgaan</button>
+        <button class="pause-btn secondary" onclick="goToSetup()">☰ Nieuw spel</button>
       </div>
     </div>
+  </div>
+</div>
 
-    <!-- Portrait -->
-    <figure class="hero__portrait reveal">
-      <div class="hero__portrait-frame">
-        <img src="img/speaking-2.jpg" alt="Dirk Gerritsen presenting research at the Research in Behavioral Finance Conference" loading="eager" />
-        <div class="hero__portrait-tag">
-          <span>Research in Behavioral Finance Conference</span>
-        </div>
-      </div>
-    </figure>
-
-    <!-- Scroll cue -->
-    <div class="hero__scroll" aria-hidden="true">
-      <span>scroll</span>
-      <span class="hero__scroll-line"></span>
+<!-- ══ WIN SCREEN ════════════════════════════════════════════ -->
+<div id="win-screen" class="screen hidden">
+  <div class="win-box">
+    <h2>🎉 Geweldig!</h2>
+    <table class="result-table">
+      <thead><tr><th>Naam</th><th>Paren</th></tr></thead>
+      <tbody id="result-body"></tbody>
+    </table>
+    <div class="win-btns">
+      <button class="win-btn primary"   onclick="replayGame()">↺ Zelfde spelers</button>
+      <button class="win-btn secondary" onclick="goToSetup()">☰ Nieuw spel</button>
     </div>
-  </section>
+  </div>
+</div>
 
-  <!-- ===== MARQUEE: where the work appears ===== -->
-  <section class="marquee" aria-label="Selected journals">
-    <div class="marquee__track">
-      <ul class="marquee__list">
-        <li>Journal of Finance</li><li>•</li>
-        <li>Journal of International Money and Finance</li><li>•</li>
-        <li>Finance Research Letters</li><li>•</li>
-        <li>Journal of Public Policy &amp; Marketing</li><li>•</li>
-        <li>Journal of Financial Services Research</li><li>•</li>
-        <li>International Review of Finance</li><li>•</li>
-        <li>Journal of Behavioral and Experimental Finance</li><li>•</li>
-        <li>International Review of Financial Analysis</li><li>•</li>
-        <li>Marketing Letters</li><li>•</li>
-        <li>Annals of Tourism Research</li><li>•</li>
-      </ul>
-      <ul class="marquee__list" aria-hidden="true">
-        <li>Journal of Finance</li><li>•</li>
-        <li>Journal of International Money and Finance</li><li>•</li>
-        <li>Finance Research Letters</li><li>•</li>
-        <li>Journal of Public Policy &amp; Marketing</li><li>•</li>
-        <li>Journal of Financial Services Research</li><li>•</li>
-        <li>International Review of Finance</li><li>•</li>
-        <li>Journal of Behavioral and Experimental Finance</li><li>•</li>
-        <li>International Review of Financial Analysis</li><li>•</li>
-        <li>Marketing Letters</li><li>•</li>
-        <li>Annals of Tourism Research</li><li>•</li>
-      </ul>
-    </div>
-  </section>
+<script>
+/* ============================================================
+   COUNTRY + BIRD DATA
+   ============================================================ */
+const WM_AUDIO = "audio/nl/";
+const WM_IMAGE = "images/nl/";
 
-  <!-- ===== ABOUT ===== -->
-  <section id="about" class="about">
-    <div class="about__inner">
-      <div class="section-head reveal">
-        <span class="section-head__no">01</span>
-        <span class="section-head__title">About</span>
-      </div>
+// Only Netherlands has bird data for now; others are placeholders (active: false)
+const COUNTRIES = [
+  {
+    id:"nederland", name:"Nederland", flag:"🇳🇱", active:true,
+    catalogKey: "nl",
+    participantWord: "Deelnemer",
+    birds: [
+      // ── 25 meest voorkomende vogels in Nederland ──────────────
+      {
+        id:"merel", name:"Merel", color:"#F5E8D8",
+        image:"Common_Blackbird.jpg",
+        sounds:[
+          "Turdus_merula_2.ogg",
+          "Common_Blackbird_(Turdus_merula)_(W1CDR0001525_BD22).ogg"
+        ]
+      },
+      {
+        id:"koolmees", name:"Koolmees", color:"#E8EDDA",
+        image:"Parus_major_Luc_Viatour.jpg",
+        sounds:[
+          "Parus_major_song.ogg",
+          "Great_Tit_(Parus_major)_(W1CDR0001393_BD1).ogg"
+        ]
+      },
+      {
+        id:"roodborst", name:"Roodborst", color:"#F9E4D4",
+        image:"Erithacus_rubecula_with_cocked_head.jpg",
+        sounds:[
+          "XC27161_-_Roodborst_-_Erithacus_rubecula.ogg",
+          "European_Robin_(Erithacus_rubecula)_(W1CDR0001425_BD16).ogg"
+        ]
+      },
+      {
+        id:"kauw", name:"Kauw", color:"#E0DDD5",
+        image:"Corvus_monedula_01.JPG",
+        sounds:["Corvus_monedula_calls.ogg"]
+      },
+      {
+        id:"spreeuw", name:"Spreeuw", color:"#E6E0D0",
+        image:"European_Starling_2006.jpg",
+        sounds:[
+          "Sturnus_vulgaris_juveniles_sound_recording.ogg",
+          "Common_Starling_(Sturnus_vulgaris)_(W1CDR0001431_BD8).ogg"
+        ]
+      },
+      {
+        id:"huismus", name:"Huismus", color:"#F0E4C4",
+        image:"House_Sparrow_Male_(Passer_Domesticus).jpg",
+        sounds:["House_Sparrows_(Passer_domesticus)_(W1CDR0001537_BD13).ogg"]
+      },
+      {
+        id:"vink", name:"Vink", color:"#F2DDD0",
+        image:"2017.03.25.-01-Kaefertaler_Wald-Mannheim--Buchfink-Maennchen.jpg",
+        sounds:["Chaffinch_(Fringilla_coelebs)_(W1CDR0001527_BD14).ogg"]
+      },
+      {
+        id:"houtduif", name:"Houtduif", color:"#DDD5CC",
+        image:"Common_Wood_Pigeon_(Columba_palumbus).JPG",
+        sounds:["Columba_palumbus_birdsong.ogg"]
+      },
+      {
+        id:"pimpelmees", name:"Pimpelmees", color:"#D8E4E0",
+        image:"2015.01.06.-Mannheim_Vogelstang--Blaumeise.jpg",
+        sounds:[
+          "Cyanistes_caeruleus_-_Eurasian_Blue_Tit_XC125793.ogg",
+          "Blue_Tit_(Cyanistes_caeruleus)_(W1CDR0001535_BD30).ogg"
+        ]
+      },
+      {
+        id:"heggenmus", name:"Heggenmus", color:"#E8E0C8",
+        image:"Dunnock.jpg",
+        sounds:["Dunnock_(Prunella_modularis)_(W1CDR0001422_BD6).ogg"]
+      },
+      {
+        id:"tjiftjaf", name:"Tjiftjaf", color:"#E8E8C8",
+        image:"Chiffchaff_-_Phylloscopus_collybita.jpg",
+        sounds:[
+          "Phylloscopus_collybita_-_Common_Chiffchaff_XC125867.ogg",
+          "Chiffchaff_(Phylloscopus_collybita)_(W1CDR0001497_BD9).ogg"
+        ]
+      },
+      {
+        id:"winterkoning", name:"Winterkoning", color:"#F0DCC4",
+        image:"Troglodytes_troglodytes_fumigatus.JPG",
+        sounds:["Eurasian_Wren_(Troglodytes_troglodytes)_(W1CDR0001461_BD5).ogg"]
+      },
+      {
+        id:"zanglijster", name:"Zanglijster", color:"#E4DDD0",
+        image:"Song_Thrush_(Turdus_philomelos)_singing_in_tree.jpg",
+        sounds:[
+          "Turdus_philomelos.ogg",
+          "Turdus_philomelos_816.ogg"
+        ]
+      },
+      {
+        id:"groenling", name:"Groenling", color:"#DCE4C0",
+        image:"Greenfinch_(Chloris_chloris)_Zelentarka.jpg",
+        sounds:["Carduelis_chloris.ogg"]
+      },
+      {
+        id:"kievit", name:"Kievit", color:"#D8E0D0",
+        image:"Vanellus_vanellus_in_flight_3.JPG",
+        sounds:["Northern_Lapwing_(Vanellus_vanellus)_(W1CDR0001471_BD4).ogg"]
+      },
+      // ── 10 extra vogels (totaal 25, spel kiest er altijd 15) ──
+      {
+        id:"ekster", name:"Ekster", color:"#E8E4D8",
+        images:["Eurasian_magpie_(Pica_pica).jpg","Pica_pica_perched_on_branch.jpg"],
+        sounds:["Eurasian_Magpie_(Pica_pica)_(W1CDR0001537_BD28).ogg","Pica_pica_-_Eurasian_Magpie_XC537413.mp3"]
+      },
+      {
+        id:"kraai", name:"Zwarte Kraai", color:"#E0DDD8",
+        images:["Corvus_corone_20070813.jpg","FL-Crow.jpg"],
+        sounds:["Carrion_Crow_(Corvus_corone)_(W1CDR0001425_BD18).ogg","Corvus_corone_-_Carrion_Crow_XC466390.mp3"]
+      },
+      {
+        id:"gaai", name:"Gaai", color:"#E8DDD0",
+        images:["Garrulus_glandarius_1_Luc_Viatour.jpg","Garrulus_glandarius_B_Luc_Viatour.jpg"],
+        sounds:["Garrulus_glandarius_iphigenia.ogg"]
+      },
+      {
+        id:"wilde-eend", name:"Wilde Eend", color:"#D4E4D8",
+        images:["Anas_platyrhynchos_male_female.jpg","Male_mallard_duck_2.jpg"],
+        sounds:["Anas_platyrhynchos_-_Mallard_-_XC62258.ogg"]
+      },
+      {
+        id:"meerkoet", name:"Meerkoet", color:"#E0DED8",
+        images:["Eurasian_coot_(Fulica_atra)_05.jpg","Eurasian.coot.london.arp.jpg"],
+        sounds:["Eurasian_Coot_(Fulica_atra)_(W1CDR0001430_BD10).ogg"]
+      },
+      {
+        id:"boerenzwaluw", name:"Boerenzwaluw", color:"#D8DDE8",
+        images:["Hirundo_rustica_Ormoz.jpg","Hirundo_rustica_LC0200.jpg"],
+        sounds:["Hirundo_rustica_-_Barn_Swallow_-_XC83449.ogg","Hirundo_rustica_-_Barn_Swallow_XC422028.mp3"]
+      },
+      {
+        id:"gierzwaluw", name:"Gierzwaluw", color:"#DDD8D0",
+        images:["Apus_apus.jpg","Apus_apus_inflight.jpg"],
+        sounds:["Mauersegler.ogg"]
+      },
+      {
+        id:"koekoek", name:"Koekoek", color:"#E4E0D8",
+        images:["Kuckuck_(Cuculus_canorus)_by_Tim_Peukert.jpg","Kuckuck_maennchen.jpg"],
+        sounds:["Cuculus_canorus.ogg","Cuculus_canorus_song.ogg"]
+      },
+      {
+        id:"nachtegaal", name:"Nachtegaal", color:"#F0E4C8",
+        images:["Nachtigall_(Luscinia_megarhynchos)-2.jpg","Nachtigall_singend_Stromkabel.jpg"],
+        sounds:["Common_Nightingale_(Luscinia_megarhynchos)_(W1CDR0001376_BD18).ogg","XN_Luscinia_megarhynchos_017.ogg"]
+      },
+      {
+        id:"gr-bonte-specht", name:"Grote Bonte Specht", color:"#EDE4D4",
+        images:["Great_Spotted_Woodpecker-Mindaugas_Urbonas.jpg","Woodpecker-nestos-river-thrace-greece-0a.jpg"],
+        sounds:["XC47350_-_Grote_Bonte_Specht_-_Dendrocopos_major.ogg","Great_Spotted_Woodpecker_(Picoides_major)_(W1CDR0001405_BD15).ogg"]
+      },
+    ]
+  },
+  { id:"albanien",    name:"Albanië",          flag:"🇦🇱", active:false },
+  { id:"andorra",     name:"Andorra",           flag:"🇦🇩", active:false },
+  { id:"belgie",      name:"België",            flag:"🇧🇪", active:false },
+  { id:"bosnie",      name:"Bosnië",            flag:"🇧🇦", active:false },
+  { id:"bulgarije",   name:"Bulgarije",         flag:"🇧🇬", active:false },
+  { id:"cyprus",      name:"Cyprus",            flag:"🇨🇾", active:false },
+  { id:"denemarken",  name:"Denemarken",        flag:"🇩🇰", active:false },
+  { id:"duitsland",   name:"Duitsland",         flag:"🇩🇪", active:false },
+  { id:"estland",     name:"Estland",           flag:"🇪🇪", active:false },
+  { id:"finland",     name:"Finland",           flag:"🇫🇮", active:false },
+  { id:"frankrijk",   name:"Frankrijk",         flag:"🇫🇷", active:false },
+  { id:"griekenland", name:"Griekenland",       flag:"🇬🇷", active:false },
+  { id:"hongarije",   name:"Hongarije",         flag:"🇭🇺", active:false },
+  { id:"ierland",     name:"Ierland",           flag:"🇮🇪", active:false },
+  { id:"ijsland",     name:"IJsland",           flag:"🇮🇸", active:false },
+  { id:"italie",      name:"Italië",            flag:"🇮🇹", active:false },
+  { id:"kosovo",      name:"Kosovo",            flag:"🇽🇰", active:false },
+  { id:"kroatie",     name:"Kroatië",           flag:"🇭🇷", active:false },
+  { id:"letland",     name:"Letland",           flag:"🇱🇻", active:false },
+  { id:"liechtenstein",name:"Liechtenstein",   flag:"🇱🇮", active:false },
+  { id:"litouwen",    name:"Litouwen",          flag:"🇱🇹", active:false },
+  { id:"luxemburg",   name:"Luxemburg",         flag:"🇱🇺", active:false },
+  { id:"malta",       name:"Malta",             flag:"🇲🇹", active:false },
+  { id:"moldavie",    name:"Moldavië",          flag:"🇲🇩", active:false },
+  { id:"monaco",      name:"Monaco",            flag:"🇲🇨", active:false },
+  { id:"montenegro",  name:"Montenegro",        flag:"🇲🇪", active:false },
+  { id:"noord-macedonie", name:"N.-Macedonië",  flag:"🇲🇰", active:false },
+  { id:"noorwegen",   name:"Noorwegen",          flag:"🇳🇴", active:false },
+  { id:"oekraine",    name:"Oekraïne",           flag:"🇺🇦", active:false },
+  { id:"oostenrijk",  name:"Oostenrijk",         flag:"🇦🇹", active:false },
+  { id:"polen",       name:"Polen",              flag:"🇵🇱", active:false },
+  { id:"portugal",    name:"Portugal",           flag:"🇵🇹", active:false },
+  { id:"roemenie",    name:"Roemenië",           flag:"🇷🇴", active:false },
+  { id:"rusland",     name:"Rusland",            flag:"🇷🇺", active:false },
+  { id:"san-marino",  name:"San Marino",         flag:"🇸🇲", active:false },
+  { id:"servie",      name:"Servië",             flag:"🇷🇸", active:false },
+  { id:"slovakije",   name:"Slowakije",          flag:"🇸🇰", active:false },
+  { id:"slovenie",    name:"Slovenië",           flag:"🇸🇮", active:false },
+  {
+    id:"spanje", name:"Spanje", flag:"🇪🇸", active:true,
+    catalogKey: "es",           // curator localStorage key
+    participantWord: "Participante",
+    birds: [
+      {id:"gorr-comun",   name:"Gorrión común",      color:"#F0E4C4", images:["House_Sparrow_Male_(Passer_Domesticus).jpg"], sounds:["House_Sparrows_(Passer_domesticus)_(W1CDR0001537_BD13).ogg"]},
+      {id:"mirlo-comun",  name:"Mirlo común",        color:"#F5E8D8", images:["Common_Blackbird.jpg"], sounds:["Turdus_merula_2.ogg","Common_Blackbird_(Turdus_merula)_(W1CDR0001525_BD22).ogg"]},
+      {id:"golondrina",   name:"Golondrina común",   color:"#D8DDE8", images:["Hirundo_rustica_Ormoz.jpg"], sounds:["Hirundo_rustica_-_Barn_Swallow_-_XC83449.ogg","Hirundo_rustica_-_Barn_Swallow_XC422028.mp3"]},
+      {id:"verdecillo",   name:"Verdecillo",          color:"#DCE4C0", images:["European_serin_(Serinus_serinus)_male.jpg","Serinus_serinus_(Madrid,_Spain)_010.jpg"], sounds:["Gulhämpling_-_Serinus_serinus._Ystad-Sweden-2012.ogg","Serinus_serinus_-_European_Serin_XC483089.mp3"]},
+      {id:"jilguero",     name:"Jilguero",            color:"#F2DDD0", images:["Carduelis_carduelis_close_up_2.jpg","European_Goldfinch_on_Spear_Thistle.jpg"], sounds:["XC101464_-_Putter_-_Carduelis_carduelis.ogg","European_Goldfinch_(Carduelis_carduelis)_(W1CDR0001491_BD15).ogg"]},
+      {id:"pinzon",       name:"Pinzón vulgar",       color:"#F2DDD0", images:["2017.03.25.-01-Kaefertaler_Wald-Mannheim--Buchfink-Maennchen.jpg"], sounds:["Chaffinch_(Fringilla_coelebs)_(W1CDR0001527_BD14).ogg","XC176182_-_Vink_-_Fringilla_coelebs.ogg"]},
+      {id:"carbonero",    name:"Carbonero común",     color:"#E8EDDA", images:["Parus_major_Luc_Viatour.jpg"], sounds:["Parus_major_song.ogg","Great_Tit_(Parus_major)_(W1CDR0001393_BD1).ogg"]},
+      {id:"herrerillo",   name:"Herrerillo común",    color:"#D8E4E0", images:["2015.01.06.-Mannheim_Vogelstang--Blaumeise.jpg"], sounds:["Cyanistes_caeruleus_-_Eurasian_Blue_Tit_XC125793.ogg","Blue_Tit_(Cyanistes_caeruleus)_(W1CDR0001535_BD30).ogg"]},
+      {id:"petirrojo",    name:"Petirrojo",           color:"#F9E4D4", images:["Erithacus_rubecula_with_cocked_head.jpg"], sounds:["XC27161_-_Roodborst_-_Erithacus_rubecula.ogg","European_Robin_(Erithacus_rubecula)_(W1CDR0001525_BD17).ogg"]},
+      {id:"curruca-cap",  name:"Curruca capirotada",  color:"#E0DDD8", images:["Sylvia_atricapilla_male_2.jpg","Female_Blackcap.JPG"], sounds:["Sylvia_atricapilla_-_Eurasian_Blackcap_XC241427.mp3","Sylvia_atricapilla.ogg"]},
+      {id:"mosquitero",   name:"Mosquitero común",    color:"#E8E8C8", images:["Chiffchaff_-_Phylloscopus_collybita.jpg"], sounds:["Phylloscopus_collybita_-_Common_Chiffchaff_XC125867.ogg","Chiffchaff_(Phylloscopus_collybita)_(W1CDR0001497_BD9).ogg"]},
+      {id:"cogujada",     name:"Cogujada común",      color:"#EDE4D4", images:["Crested_Lark_(22026336489).jpg","Galerida_cristata_meridionalis.jpg"], sounds:[]},
+      {id:"paloma-torcaz",name:"Paloma torcaz",       color:"#DDD5CC", images:["Common_Wood_Pigeon_(Columba_palumbus).JPG"], sounds:["Columba_palumbus_birdsong.ogg","Columba_palumbus_-_Common_Wood_Pigeon_XC108354.mp3"]},
+      {id:"tortola-turca",name:"Tórtola turca",       color:"#E4DDD0", images:["Tourterelle.jpg","Eurasian_Collared_Dove-Mindaugas_Urbonas-1.jpg"], sounds:["Streptopelia_decaocto_-_Eurasian_Collared_Dove_-_XC82758.ogg","Tourterelle.ogg"]},
+      {id:"abubilla",     name:"Abubilla",            color:"#F0DCC4", images:["Upupa_epops_Madrid_01.jpg","Upupa_epops_su_un_ciliegio.jpg"], sounds:["Abubilla.ogg","Upupa_epops_·_XC135728.ogg"]},
+      {id:"urraca-es",    name:"Urraca",              color:"#E8E4D8", images:["Eurasian_magpie_(Pica_pica).jpg"], sounds:["Eurasian_Magpie_(Pica_pica)_(W1CDR0001537_BD28).ogg","Pica_pica_-_Eurasian_Magpie_XC537413.mp3"]},
+      {id:"corneja-es",   name:"Corneja negra",       color:"#E0DDD8", images:["Corvus_corone_20070813.jpg"], sounds:["Carrion_Crow_(Corvus_corone)_(W1CDR0001425_BD18).ogg","Corvus_corone_-_Carrion_Crow_XC461980.mp3"]},
+      {id:"estornino-es", name:"Estornino pinto",     color:"#E6E0D0", images:["Common_Starling_(Sturnus_vulgaris)_Leek_Wootton.jpg"], sounds:["Common_Starling_(Sturnus_vulgaris)_(W1CDR0001431_BD8).ogg","Sturnus_vulgaris_-_Common_Starling_XC474427.mp3"]},
+      {id:"verdejon",     name:"Verderón común",      color:"#DCE4C0", images:["Greenfinch_(Chloris_chloris)_Zelentarka.jpg"], sounds:["Carduelis_chloris.ogg"]},
+      {id:"vencejo-es",   name:"Vencejo común",       color:"#DDD8D0", images:["Apus_apus.jpg","Apus_apus_inflight.jpg"], sounds:["Mauersegler.ogg"]},
+      {id:"lavandera",    name:"Lavandera blanca",    color:"#EDE8D8", images:["Motacilla_alba_alba.JPG","Pied_Wagtail_perching.jpg"], sounds:["Motacilla_alba_-_White_Wagtail_XC466458.mp3","Motacilla_alba_-_White_Wagtail_XC501786.mp3"]},
+      {id:"abejaruco",    name:"Abejaruco",           color:"#F0E0C0", images:["Abejaruco_sobre_higuera.jpg","Merops_apiaster_04.jpg"], sounds:["Merops_apiaster_-_European_Bee-eater_XC477953.mp3","Bijeneter_-_SoundCloud_-_Beeld_en_Geluid.ogg"]},
+      {id:"cuco-es",      name:"Cuco común",          color:"#E4E0D8", images:["Kuckuck_(Cuculus_canorus)_by_Tim_Peukert.jpg"], sounds:["Cuculus_canorus.ogg","Cuculus_canorus_song.ogg"]},
+      {id:"lechuza",      name:"Lechuza común",       color:"#EDE8D8", images:["Barn_Owl_in_Norfolk.jpg","Flying_owl.jpg"], sounds:["Tyto_alba_-_Western_Barn_Owl_XC432000.mp3","Tyto_alba_-_Western_Barn_Owl_XC433736.mp3"]},
+      {id:"ciguena",      name:"Cigüeña blanca",      color:"#EAE8E4", images:["White_Stork_Weißstorch_Ciconia_ciconia.jpg","Ooievaar_in_het_Zwin.jpg"], sounds:["Ciconia_ciconia_bill-clattering.ogg","Klapperstorch.ogg"]},
+    ]
+  },
+  { id:"tsjechie",    name:"Tsjechië",           flag:"🇨🇿", active:false },
+  { id:"turkije",     name:"Turkije",            flag:"🇹🇷", active:false },
+  { id:"uk",          name:"Ver. Koninkrijk",    flag:"🇬🇧", active:false },
+  { id:"vaticaan",    name:"Vaticaan",           flag:"🇻🇦", active:false },
+  { id:"wit-rusland", name:"Wit-Rusland",        flag:"🇧🇾", active:false },
+  { id:"zweden",      name:"Zweden",             flag:"🇸🇪", active:false },
+  { id:"zwitserland", name:"Zwitserland",        flag:"🇨🇭", active:false },
+];
 
-      <div class="about__grid">
-        <div class="about__copy reveal">
-          <p class="about__lede">
-            I am an Associate Professor at <strong>Utrecht University School of
-            Economics</strong>, where I have taught and researched for two
-            decades — first as a lecturer, then assistant professor, and
-            since 2025 in my current role.
-          </p>
-          <p>
-            My research asks a single, stubborn question: <em>what really moves
-            investors?</em> The textbook answer — rational expectations, perfect
-            information — collides with the world I actually study: analysts
-            whose forecasts anchor on round numbers, retail traders who copy
-            financial influencers, fund managers who quietly rename their
-            products to ride the ESG wave, and tourists who lose a few percent
-            of their holiday budget to dynamic currency conversion screens at
-            airport ATMs.
-          </p>
-          <p>
-            That mix of finance, psychology, and field data has taken me from
-            Stellenbosch to Shanghai. It has also produced work that
-            occasionally crosses over: into the pages of <em>Het Financieele
-            Dagblad</em>, onto Dutch radio, and into the courtrooms of policy
-            debate around consumer financial protection.
-          </p>
-          <p>
-            I teach in the <strong>MSc Banking &amp; Finance</strong> — which I
-            directed from 2019 to 2025 — and I was U.S.E. Teacher of the Year
-            in 2020. I currently co-supervise one PhD student.
-          </p>
-        </div>
+/* ============================================================
+   SETUP STATE
+   ============================================================ */
+let selectedCountry = COUNTRIES.find(c => c.id === "nederland");
+let numPlayers = 1;
 
-        <aside class="about__side reveal">
-          <div class="stat">
-            <span class="stat__no">20+</span>
-            <span class="stat__label">Peer-reviewed papers</span>
-          </div>
-          <div class="stat">
-            <span class="stat__no">11</span>
-            <span class="stat__label">Visiting positions on four continents</span>
-          </div>
-          <div class="stat">
-            <span class="stat__no">5</span>
-            <span class="stat__label">Awards including <em>Best Paper</em> &amp; <em>Teacher of the Year</em></span>
-          </div>
-          <div class="stat">
-            <span class="stat__no">2014</span>
-            <span class="stat__label">PhD, Tjalling C. Koopmans Institute</span>
-          </div>
-        </aside>
-      </div>
-    </div>
-  </section>
+function initSetup() {
+  buildCountryGrid();
+  buildCountRow();
+  renderPlayerInputs();
+}
 
-  <!-- ===== RESEARCH THEMES ===== -->
-  <section id="research" class="research">
-    <div class="research__inner">
-      <div class="section-head reveal">
-        <span class="section-head__no">02</span>
-        <span class="section-head__title">Research</span>
-      </div>
+function buildCountryGrid() {
+  const grid = document.getElementById("country-grid");
+  grid.innerHTML = "";
+  COUNTRIES.forEach(c => {
+    const btn = document.createElement("button");
+    btn.className = "country-btn" +
+      (c.active ? "" : " unavailable") +
+      (c.id === selectedCountry.id ? " active" : "");
+    btn.innerHTML = `<span class="flag">${c.flag}</span><span class="cname">${c.name}</span>`;
+    btn.title = c.active ? c.name : `${c.name} (binnenkort beschikbaar)`;
+    if (c.active) {
+      btn.onclick = () => selectCountry(c);
+    }
+    grid.appendChild(btn);
+  });
+}
 
-      <h2 class="research__h reveal">
-        Four threads that <em>keep coming back</em>.
-      </h2>
+function selectCountry(c) {
+  selectedCountry = c;
+  buildCountryGrid();
+  updateNamesLabel();
+  renderPlayerInputs();
+}
 
-      <ol class="themes">
-        <li class="theme reveal">
-          <span class="theme__no">I</span>
-          <div class="theme__body">
-            <h3 class="theme__title">Sustainable Finance &amp; ESG</h3>
-            <p>
-              Do ESG ratings move stock prices? Do fund managers <em>truly</em>
-              change strategy when they rename a fund &ldquo;sustainable&rdquo;
-              — or just the label on the door? My recent work tackles greenwashing,
-              climate-risk pricing, and the dominant role of the environmental
-              pillar.
-            </p>
-            <ul class="theme__papers">
-              <li>
-                <span class="paper-year">2026</span>
-                <a href="https://doi.org/10.1016/j.frl.2025.108238" target="_blank" rel="noopener">Environmental ratings and stock returns</a>
-                <span class="paper-venue">Finance Research Letters</span>
-              </li>
-              <li>
-                <span class="paper-year">2025</span>
-                <a href="https://doi.org/10.1016/j.jimonfin.2024.103263" target="_blank" rel="noopener">Renaming with purpose</a> <span class="badge">Best Paper</span>
-                <span class="paper-venue">J. of Int'l Money &amp; Finance</span>
-              </li>
-              <li>
-                <span class="paper-year">2025</span>
-                <a href="https://doi.org/10.1016/j.jimonfin.2025.103309" target="_blank" rel="noopener">ESG rating changes and stock returns</a>
-                <span class="paper-venue">J. of Int'l Money &amp; Finance</span>
-              </li>
-            </ul>
-          </div>
-        </li>
+function buildCountRow() {
+  const row = document.getElementById("count-row");
+  row.innerHTML = "";
+  [1,2,3,4,5].forEach(n => {
+    const btn = document.createElement("button");
+    btn.className = "count-btn" + (n === numPlayers ? " active" : "");
+    btn.textContent = n;
+    btn.onclick = () => selectCount(n);
+    row.appendChild(btn);
+  });
+}
 
-        <li class="theme reveal">
-          <span class="theme__no">II</span>
-          <div class="theme__body">
-            <h3 class="theme__title">Analysts, Forecasts &amp; Reference Points</h3>
-            <p>
-              My PhD asked whether security analysts' opinions actually matter
-              — and the answer, it turns out, is more nuanced than either the
-              efficient-markets crowd or the analyst-bashers would have you
-              believe. Target prices act as reference points; recommendations
-              move some markets more than others; and chartists, surprisingly,
-              sometimes <em>are</em> artists.
-            </p>
-            <ul class="theme__papers">
-              <li>
-                <span class="paper-year">2017</span>
-                <a href="https://doi.org/10.1016/j.jbef.2017.07.004" target="_blank" rel="noopener">Target prices as reference point and takeover completion</a>
-                <span class="paper-venue">J. of Behavioral &amp; Exp. Finance</span>
-              </li>
-              <li>
-                <span class="paper-year">2016</span>
-                <a href="https://doi.org/10.1016/j.irfa.2016.06.008" target="_blank" rel="noopener">Are chartists artists?</a>
-                <span class="paper-venue">Int'l Review of Financial Analysis</span>
-              </li>
-              <li>
-                <span class="paper-year">2014</span>
-                The relevance of security analyst opinions
-                <span class="paper-venue">PhD thesis · Koopmans Institute</span>
-              </li>
-            </ul>
-          </div>
-        </li>
+function selectCount(n) {
+  numPlayers = n;
+  document.querySelectorAll(".count-btn").forEach((b, i) =>
+    b.classList.toggle("active", i + 1 === n)
+  );
+  renderPlayerInputs();
+}
 
-        <li class="theme reveal">
-          <span class="theme__no">III</span>
-          <div class="theme__body">
-            <h3 class="theme__title">Retail Investors &amp; Financial Decision-Making</h3>
-            <p>
-              Where finance meets consumer behavior. I have studied dynamic
-              currency conversion at foreign ATMs (a quiet tax on the less
-              financially literate), the rise of finfluencers and whether
-              following their advice costs you returns, bank switching
-              behavior, and the savings-rate puzzle.
-            </p>
-            <ul class="theme__papers">
-              <li>
-                <span class="paper-year">2025</span>
-                <a href="https://doi.org/10.1111/ijcs.70037" target="_blank" rel="noopener">Influencers and consumer financial decision-making</a>
-                <span class="paper-venue">Int'l J. of Consumer Studies</span>
-              </li>
-              <li>
-                <span class="paper-year">2023</span>
-                <a href="https://doi.org/10.1177/07439156231157721" target="_blank" rel="noopener">Dynamic currency conversion harms the less financially literate</a>
-                <span class="paper-venue">J. of Public Policy &amp; Marketing</span>
-              </li>
-              <li>
-                <span class="paper-year">2020</span>
-                <a href="https://doi.org/10.1007/s10693-018-0305-x" target="_blank" rel="noopener">Bank switching and interest rates</a>
-                <span class="paper-venue">J. of Financial Services Research</span>
-              </li>
-            </ul>
-          </div>
-        </li>
+function participantWord() {
+  return selectedCountry.participantWord || "Deelnemer";
+}
 
-        <li class="theme reveal">
-          <span class="theme__no">IV</span>
-          <div class="theme__body">
-            <h3 class="theme__title">Crypto, Disclosure &amp; Market Microstructure</h3>
-            <p>
-              Newer markets, older biases. I have asked whether Bitcoin
-              "experts" can be trusted, whether technical trading rules
-              actually profit in crypto markets, and what happens when
-              confidential short positions are accidentally disclosed to the
-              public.
-            </p>
-            <ul class="theme__papers">
-              <li>
-                <span class="paper-year">2024</span>
-                <a href="https://doi.org/10.1111/jofi.13337" target="_blank" rel="noopener">Non-standard errors</a>
-                <span class="paper-venue">Journal of Finance</span>
-              </li>
-              <li>
-                <span class="paper-year">2022</span>
-                <a href="https://doi.org/10.1016/j.frl.2021.102266" target="_blank" rel="noopener">Can Bitcoin investors profit from crypto experts?</a>
-                <span class="paper-venue">Finance Research Letters</span>
-              </li>
-              <li>
-                <span class="paper-year">2019</span>
-                <a href="https://doi.org/10.1016/j.frl.2018.04.004" target="_blank" rel="noopener">Accidental disclosure of confidential short positions</a>
-                <span class="paper-venue">Finance Research Letters</span>
-              </li>
-            </ul>
-          </div>
-        </li>
-      </ol>
-    </div>
-  </section>
+function updateNamesLabel() {
+  // Label above name inputs reflects the chosen country's word
+}
 
-  <!-- ===== FEATURED PUBLICATIONS ===== -->
-  <section id="publications" class="pubs">
-    <div class="pubs__inner">
-      <div class="section-head reveal">
-        <span class="section-head__no">03</span>
-        <span class="section-head__title">Selected Publications</span>
-      </div>
+function renderPlayerInputs() {
+  const container = document.getElementById("player-inputs");
+  const prev = Array.from(container.querySelectorAll("input")).map(i => i.value);
+  container.innerHTML = "";
+  const word = participantWord();
+  for (let i = 0; i < numPlayers; i++) {
+    const row = document.createElement("div");
+    row.className = "player-row";
+    const lbl = document.createElement("label");
+    lbl.textContent = `${word} ${i + 1}`;
+    const inp = document.createElement("input");
+    inp.type = "text";
+    inp.placeholder = `${word} ${i + 1}`;
+    inp.value = prev[i] || "";
+    row.appendChild(lbl);
+    row.appendChild(inp);
+    container.appendChild(row);
+  }
+}
 
-      <h2 class="pubs__h reveal">
-        Recent &amp; <em>most cited</em>.
-      </h2>
+/* ============================================================
+   GAME STATE
+   ============================================================ */
+let players        = [];
+let currentIdx     = 0;
+let birdList       = [];
+let flipped        = [];
+let locked         = false;
+let remainingPairs = 0;
+let paused         = false;
 
-      <article class="pub pub--featured reveal">
-        <div class="pub__year">2024</div>
-        <div class="pub__body">
-          <div class="pub__authors">Menkveld, A.J., Dreber, A., Holzmeister, F., et al. <strong>(incl. Gerritsen, D.F.)</strong></div>
-          <h3 class="pub__title"><a href="https://doi.org/10.1111/jofi.13337" target="_blank" rel="noopener">Non-standard errors</a></h3>
-          <div class="pub__venue"><em>Journal of Finance</em> · 79(3), 2339–2390</div>
-          <p class="pub__note">
-            A landmark crowd-sourced replication study: 164 research teams
-            independently analyze the same six hypotheses on identical data,
-            quantifying how much variation in published findings is driven
-            not by the data but by the choices researchers make along the way.
-          </p>
-        </div>
-      </article>
+// audio — Web Audio API
+let audioCtx     = null;   // lazy init
+let audioCache   = {};     // url → AudioBuffer
+let activeSource = null;   // huidig BufferSourceNode
+let activeFadeGain = null; // huidig GainNode
+let activeAudio  = null;   // fallback HTMLAudioElement
+let activeFront  = null;
+let fadeTimerId  = null;
 
-      <div class="pubs__grid">
-        <article class="pub reveal">
-          <div class="pub__year">2025</div>
-          <div class="pub__body">
-            <div class="pub__authors">Gibbon, K., Derwall, J., <strong>Gerritsen, D.F.</strong>, Koedijk, K.</div>
-            <h3 class="pub__title"><a href="https://doi.org/10.1016/j.jimonfin.2024.103263" target="_blank" rel="noopener">Renaming with purpose: Investor response and fund manager behavior after ESG renaming</a></h3>
-            <div class="pub__venue"><em>J. of International Money and Finance</em> · 152, 103263</div>
-            <div class="pub__tag"><span class="badge badge--gold">Best Paper Award · GRASFI 2024</span></div>
-          </div>
-        </article>
+function getAudioCtx() {
+  if (!audioCtx)
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
 
-        <article class="pub reveal">
-          <div class="pub__year">2026</div>
-          <div class="pub__body">
-            <div class="pub__authors">Galema, R.J., <strong>Gerritsen, D.F.</strong></div>
-            <h3 class="pub__title"><a href="https://doi.org/10.1016/j.frl.2025.108238" target="_blank" rel="noopener">Environmental ratings and stock returns: The dominant role of climate change</a></h3>
-            <div class="pub__venue"><em>Finance Research Letters</em> · 89, 108238</div>
-          </div>
-        </article>
+/* ============================================================
+   START / REPLAY
+   ============================================================ */
+function startGame() {
+  const inputs = document.querySelectorAll("#player-inputs input");
+  const word   = participantWord();
+  players = Array.from(inputs).map((inp, i) => ({
+    name:  inp.value.trim() || `${word} ${i + 1}`,
+    score: 0
+  }));
+  launchGame();
+}
 
-        <article class="pub reveal">
-          <div class="pub__year">2025</div>
-          <div class="pub__body">
-            <div class="pub__authors">Galema, R.J., <strong>Gerritsen, D.F.</strong></div>
-            <h3 class="pub__title"><a href="https://doi.org/10.1016/j.jimonfin.2025.103309" target="_blank" rel="noopener">ESG rating changes and stock returns</a></h3>
-            <div class="pub__venue"><em>J. of International Money and Finance</em> · forthcoming</div>
-          </div>
-        </article>
+function replayGame() {
+  // Same players, reset scores
+  players.forEach(p => p.score = 0);
+  launchGame();
+}
 
-        <article class="pub reveal">
-          <div class="pub__year">2025</div>
-          <div class="pub__body">
-            <div class="pub__authors"><strong>Gerritsen, D.F.</strong>, de Regt, A.</div>
-            <h3 class="pub__title"><a href="https://doi.org/10.1111/ijcs.70037" target="_blank" rel="noopener">Influencers and consumer financial decision-making</a></h3>
-            <div class="pub__venue"><em>Int'l Journal of Consumer Studies</em> · forthcoming</div>
-          </div>
-        </article>
+function launchGame() {
+  currentIdx = 0;
+  flipped    = [];
+  locked     = false;
+  paused     = false;
 
-        <article class="pub reveal">
-          <div class="pub__year">2023</div>
-          <div class="pub__body">
-            <div class="pub__authors"><strong>Gerritsen, D.F.</strong>, Lancee, B.S., Rigtering, J.P.C.</div>
-            <h3 class="pub__title"><a href="https://doi.org/10.1177/07439156231157721" target="_blank" rel="noopener">Dynamic currency conversion payment options specifically harm less financially literate customers</a></h3>
-            <div class="pub__venue"><em>J. of Public Policy &amp; Marketing</em> · 42(3), 203–222</div>
-          </div>
-        </article>
+  // Haal de volledige catalogus op en filter op actieve vogels via curator-instellingen
+  const allBirds   = selectedCountry.birds || [];
+  const catalog    = loadCuratorState();
+  const GAME_SIZE  = 15;
 
-        <article class="pub reveal">
-          <div class="pub__year">2022</div>
-          <div class="pub__body">
-            <div class="pub__authors"><strong>Gerritsen, D.F.</strong>, Lugtigheid, R.A.C., Walther, T.</div>
-            <h3 class="pub__title"><a href="https://doi.org/10.1016/j.frl.2021.102266" target="_blank" rel="noopener">Can Bitcoin investors profit from predictions by crypto experts?</a></h3>
-            <div class="pub__venue"><em>Finance Research Letters</em> · 46(A), 102266</div>
-          </div>
-        </article>
+  let activeBirds;
+  if (catalog) {
+    // Pas curator-instellingen toe: filter uitgeschakelde vogels
+    activeBirds = allBirds
+      .filter(b => catalog[b.id]?.enabled !== false)
+      .map(b => {
+        const cs = catalog[b.id];
+        if (!cs) return b;
+        return {
+          ...b,
+          images: cs.images?.length ? cs.images : (b.images || [b.image]),
+          sounds: cs.sounds?.length
+            ? cs.sounds.map(s => s.file)
+            : b.sounds,
+          soundStarts: Object.fromEntries(
+            (cs.sounds || []).map(s => [s.file, s.start || 0])
+          ),
+        };
+      });
+  } else {
+    activeBirds = allBirds;
+  }
 
-        <article class="pub reveal">
-          <div class="pub__year">2020</div>
-          <div class="pub__body">
-            <div class="pub__authors"><strong>Gerritsen, D.F.</strong>, Bouri, E., Ramezanifar, E., Roubaud, D.</div>
-            <h3 class="pub__title"><a href="https://doi.org/10.1016/j.frl.2019.08.011" target="_blank" rel="noopener">The profitability of technical trading rules in the Bitcoin market</a></h3>
-            <div class="pub__venue"><em>Finance Research Letters</em> · 34, 101263</div>
-          </div>
-        </article>
+  // Kies willekeurig GAME_SIZE vogels
+  birdList = shuffle(activeBirds).slice(0, Math.min(GAME_SIZE, activeBirds.length));
+  remainingPairs = birdList.length;
 
-        <article class="pub reveal">
-          <div class="pub__year">2020</div>
-          <div class="pub__body">
-            <div class="pub__authors"><strong>Gerritsen, D.F.</strong>, Bikker, J.A.</div>
-            <h3 class="pub__title"><a href="https://doi.org/10.1007/s10693-018-0305-x" target="_blank" rel="noopener">Bank switching and interest rates: Examining annual transfers between savings accounts</a></h3>
-            <div class="pub__venue"><em>J. of Financial Services Research</em> · 57, 29–49</div>
-          </div>
-        </article>
+  stopAudio();
+  document.getElementById("pause-overlay").classList.add("hidden");
+  showScreen("game-screen");
+  renderScores();
+  buildGrid();
+}
 
-        <article class="pub reveal">
-          <div class="pub__year">2017</div>
-          <div class="pub__body">
-            <div class="pub__authors"><strong>Gerritsen, D.F.</strong>, Weitzel, U.</div>
-            <h3 class="pub__title"><a href="https://doi.org/10.1016/j.jbef.2017.07.004" target="_blank" rel="noopener">Security analyst target prices as reference point and takeover completion</a></h3>
-            <div class="pub__venue"><em>J. of Behavioral and Experimental Finance</em> · 15, 1–14</div>
-          </div>
-        </article>
-      </div>
+/* ============================================================
+   GRID
+   ============================================================ */
+function buildGrid() {
+  updatePairsLeft();
+  const grid = document.getElementById("grid");
+  grid.innerHTML = "";
 
-      
-    </div>
-  </section>
+  const cardData = [];
+  birdList.forEach(bird => {
+    // Willekeurig geluid kiezen
+    const sound = bird.sounds[Math.floor(Math.random() * bird.sounds.length)];
+    // Willekeurig plaatje kiezen (ondersteunt zowel bird.image als bird.images[])
+    const imgPool = bird.images || [bird.image];
+    const image   = imgPool[Math.floor(Math.random() * imgPool.length)];
+    cardData.push({ type: "image", bird, image });
+    cardData.push({ type: "sound", bird, sound });
+  });
 
-  <!-- ===== TEACHING ===== -->
-  <section id="teaching" class="teaching">
-    <div class="teaching__inner">
-      <div class="section-head reveal section-head--light">
-        <span class="section-head__no">04</span>
-        <span class="section-head__title">Teaching &amp; Impact</span>
-      </div>
+  shuffle(cardData).forEach(cd => grid.appendChild(makeCard(cd)));
+}
 
-      <div class="teaching__grid">
-        <div class="teaching__copy reveal">
-          <h2 class="teaching__h">
-            Twenty years in front of <em>Utrecht's</em> finance students.
-          </h2>
-          <p>
-            I joined Utrecht University in 2005 as a lecturer and have taught
-            here ever since — through three career stages and one PhD. From
-            2019 through 2025 I served as <strong>Program Director of the MSc
-            in Banking &amp; Finance</strong>; in 2022 I earned the Senior
-            Teaching Qualification (SKOw). I co-supervise PhD students and
-            review for ten+ journals.
-          </p>
-          <p>
-            I have lectured in seven countries as a visiting scholar —
-            Stellenbosch, Fudan, Nyenrode, Victoria, Anton de Kom, Erasmus,
-            and others — and bring back to Utrecht a comparative view of
-            what financial education needs to look like in 2026.
-          </p>
-        </div>
+/* ── Geluidsicoon: klein vogelhoofd linksboven ───────────────────────── */
+const SOUND_ICON_SVG = `<svg viewBox="0 0 200 100" width="100%" height="100%" style="display:block">
+<defs>
+  <filter id="sic_p" x="-8%" y="-8%" width="116%" height="116%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.7" numOctaves="3" seed="9" result="n"/>
+    <feDisplacementMap in="SourceGraphic" in2="n" scale="1.0" xChannelSelector="R" yChannelSelector="G"/>
+  </filter>
+</defs>
+<style>
+  @keyframes sic_n{0%{opacity:0;transform:translateY(0) rotate(-4deg)}25%{opacity:.75}100%{opacity:0;transform:translateY(-28px) rotate(7deg)}}
+  .sn1{animation:sic_n 2.2s ease-in-out 0s   infinite}
+  .sn2{animation:sic_n 2.2s ease-in-out .75s infinite}
+  .sn3{animation:sic_n 2.2s ease-in-out 1.4s infinite}
+</style>
+<!-- vogelhoofd linksboven, zijwaarts (snavel naar rechts) -->
+<g filter="url(#sic_p)" transform="translate(18,14)">
+  <!-- hals/borst aanzet (klein) -->
+  <ellipse cx="18" cy="46" rx="14" ry="11" fill="#c8a878" fill-opacity=".45" stroke="#8a6840" stroke-width=".9"/>
+  <!-- oranje borstvlek -->
+  <path d="M20,38 Q32,36 34,44 Q32,52 24,53 Q17,52 15,46 Q15,37 20,38 Z"
+        fill="#d4683a" fill-opacity=".6" stroke="#b04820" stroke-width=".7"/>
+  <!-- kop -->
+  <circle cx="30" cy="24" r="18" fill="#c8a878" fill-opacity=".58" stroke="#8a6840" stroke-width="1"/>
+  <!-- oranje masker op kop -->
+  <path d="M26,8 Q44,6 47,18 Q46,30 32,32 Q23,30 21,22 Q21,8 26,8 Z"
+        fill="#d4683a" fill-opacity=".58" stroke="#b04820" stroke-width=".8"/>
+  <!-- oog -->
+  <circle cx="38" cy="19" r="6" fill="white" fill-opacity=".88" stroke="#6a4820" stroke-width=".9"/>
+  <circle cx="39" cy="19.5" r="3.8" fill="#2a1a08" fill-opacity=".92"/>
+  <circle cx="40.2" cy="18" r="1.5" fill="white" fill-opacity=".95"/>
+  <!-- snavel (puntig, naar rechts) -->
+  <path d="M48,21 Q62,17 65,19 Q62,22 48,23 Z"
+        fill="#8a6030" fill-opacity=".82" stroke="#6a4018" stroke-width=".8"/>
+  <line x1="48" y1="22" x2="64" y2="19.5" stroke="#6a4018" stroke-width=".6" opacity=".5"/>
+</g>
+<!-- muzieknoten rechts van snavel -->
+<g fill="#8a6030" font-family="Georgia,serif">
+  <g class="sn1"><text x="96"  y="38" font-size="16" opacity=".7">♪</text></g>
+  <g class="sn2"><text x="112" y="26" font-size="13" opacity=".65">♫</text></g>
+  <g class="sn3"><text x="100" y="18" font-size="11" opacity=".6">♩</text></g>
+</g>
+</svg>`;
 
-        <ul class="awards reveal">
-          <li>
-            <span class="award__year">2024</span>
-            <div>
-              <span class="award__title">Best Paper Award</span>
-              <span class="award__detail">GRASFI conf., <em>Renaming with purpose</em></span>
-            </div>
-          </li>
-          <li>
-            <span class="award__year">2020</span>
-            <div>
-              <span class="award__title">Teacher of the Year</span>
-              <span class="award__detail">U.S.E. · nominated UU-wide</span>
-            </div>
-          </li>
-          <li>
-            <span class="award__year">2019</span>
-            <div>
-              <span class="award__title">SURF Award (runner-up)</span>
-              <span class="award__detail">Education innovation · Python in MSc.</span>
-            </div>
-          </li>
-          <li>
-            <span class="award__year">2018</span>
-            <div>
-              <span class="award__title">Outstanding Reviewer Award</span>
-              <span class="award__detail">Finance Research Letters</span>
-            </div>
-          </li>
-          <li>
-            <span class="award__year">2014</span>
-            <div>
-              <span class="award__title">Research Talent Prize</span>
-              <span class="award__detail">U.S.E. · PhD work</span>
-            </div>
-          </li>
-        </ul>
-      </div>
-    </div>
-  </section>
+/* ── Kaartrug: Roodborst schets (landscape, statisch) ───────────────── */
+const CARD_BACK_SVG = `<svg viewBox="0 0 240 160" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice">
+<defs>
+  <filter id="cpenc" x="-5%" y="-5%" width="110%" height="110%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.55" numOctaves="3" seed="5" result="n"/>
+    <feDisplacementMap in="SourceGraphic" in2="n" scale="1.4" xChannelSelector="R" yChannelSelector="G"/>
+  </filter>
+  <filter id="csft"><feGaussianBlur stdDeviation="1.5"/></filter>
+</defs>
+<!-- takje dwars over de kaart -->
+<g filter="url(#cpenc)">
+  <path d="M20,108 Q80,104 120,106 Q170,108 220,104" stroke="#7a5c3a" stroke-width="3.5" fill="none" stroke-linecap="round" opacity=".65"/>
+  <line x1="60" y1="106" x2="57" y2="111" stroke="#9a7a55" stroke-width="1.2" opacity=".5"/>
+  <line x1="100" y1="105" x2="98" y2="110" stroke="#9a7a55" stroke-width="1.2" opacity=".4"/>
+  <line x1="150" y1="106" x2="153" y2="111" stroke="#9a7a55" stroke-width="1.2" opacity=".4"/>
+  <line x1="185" y1="105" x2="183" y2="110" stroke="#9a7a55" stroke-width="1.2" opacity=".4"/>
+</g>
+<!-- roodborst (groot, midden-links, zijwaarts) -->
+<g filter="url(#cpenc)" transform="translate(100,55)">
+  <!-- staart -->
+  <path d="M-42,22 Q-58,30 -66,46" stroke="#7a6040" stroke-width="3" fill="none" stroke-linecap="round" opacity=".7"/>
+  <path d="M-40,20 Q-54,26 -60,38" stroke="#8a7050" stroke-width="2" fill="none" stroke-linecap="round" opacity=".5"/>
+  <path d="M-38,18 Q-50,22 -54,32" stroke="#9a8060" stroke-width="1.5" fill="none" stroke-linecap="round" opacity=".4"/>
+  <!-- vleugel -->
+  <path d="M-36,0 Q-60,10 -66,28 Q-48,24 -26,18 Q-18,14 -22,2 Z" fill="#8a7050" fill-opacity=".5" stroke="#6a5030" stroke-width="1.2"/>
+  <line x1="-56" y1="26" x2="-44" y2="14" stroke="#9a8060" stroke-width="1" opacity=".5"/>
+  <line x1="-48" y1="26" x2="-36" y2="14" stroke="#9a8060" stroke-width="1" opacity=".45"/>
+  <line x1="-40" y1="24" x2="-28" y2="12" stroke="#9a8060" stroke-width=".9" opacity=".4"/>
+  <!-- lichte vleugelbies -->
+  <path d="M-36,0 Q-28,-2 -22,2" stroke="#d4c8a8" stroke-width="1.8" fill="none" opacity=".55"/>
+  <!-- lichaam -->
+  <ellipse cx="-8" cy="16" rx="22" ry="17" fill="#c8a878" fill-opacity=".55" stroke="#8a6840" stroke-width="1.2"/>
+  <!-- borst oranje-rood -->
+  <path d="M-4,-2 Q18,-4 24,10 Q22,26 8,28 Q-4,27 -8,16 Q-8,0 -4,-2 Z" fill="#d4683a" fill-opacity=".65" stroke="#b04820" stroke-width="1"/>
+  <line x1="0" y1="2" x2="10" y2="22" stroke="#c05020" stroke-width=".8" opacity=".4"/>
+  <line x1="6" y1="0" x2="16" y2="20" stroke="#c05020" stroke-width=".7" opacity=".3"/>
+  <!-- kop -->
+  <circle cx="28" cy="-4" r="18" fill="#c8a878" fill-opacity=".6" stroke="#8a6840" stroke-width="1.2"/>
+  <!-- kop oranje masker -->
+  <path d="M24,-20 Q42,-22 46,-8 Q44,6 30,8 Q20,6 18,-4 Q18,-18 24,-20 Z" fill="#d4683a" fill-opacity=".6" stroke="#b04820" stroke-width=".9"/>
+  <!-- oog -->
+  <circle cx="36" cy="-6" r="6.5" fill="white" fill-opacity=".88" stroke="#6a4820" stroke-width="1"/>
+  <circle cx="37" cy="-5.5" r="4.2" fill="#2a1a08" fill-opacity=".92"/>
+  <circle cx="38.2" cy="-7" r="1.8" fill="white" fill-opacity=".95"/>
+  <!-- snavel -->
+  <path d="M46,-8 Q62,-12 66,-10 Q62,-5 46,-4 Z" fill="#8a6030" fill-opacity=".82" stroke="#6a4018" stroke-width=".9"/>
+  <line x1="46" y1="-6" x2="65" y2="-10" stroke="#6a4018" stroke-width=".7" opacity=".5"/>
+  <!-- pootjes -->
+  <line x1="-10" y1="32" x2="-14" y2="38" stroke="#8a6840" stroke-width="2" stroke-linecap="round" opacity=".7"/>
+  <line x1="0" y1="33" x2="-4" y2="38" stroke="#8a6840" stroke-width="2" stroke-linecap="round" opacity=".7"/>
+  <line x1="-14" y1="38" x2="-20" y2="42" stroke="#8a6840" stroke-width="1.5" stroke-linecap="round" opacity=".6"/>
+  <line x1="-14" y1="38" x2="-10" y2="42" stroke="#8a6840" stroke-width="1.5" stroke-linecap="round" opacity=".6"/>
+  <line x1="-4" y1="38" x2="-10" y2="42" stroke="#8a6840" stroke-width="1.5" stroke-linecap="round" opacity=".6"/>
+</g>
+<!-- subtiele tekst onderaan -->
+<text x="120" y="152" text-anchor="middle" font-size="8"
+  font-family="Georgia,serif" fill="#8a6030" fill-opacity=".4"
+  letter-spacing="3">BIRD BURST</text>
+</svg>`;
 
-  <!-- ===== PRESS ===== -->
-  <section id="press" class="press">
-    <div class="press__inner">
-      <div class="section-head reveal">
-        <span class="section-head__no">05</span>
-        <span class="section-head__title">In the Press</span>
-      </div>
+function makeCard(cd) {
+  const el = document.createElement("div");
+  el.className        = "card";
+  el.dataset.birdId   = cd.bird.id;
+  el.dataset.type     = cd.type;
+  if (cd.sound) {
+    el.dataset.sound = cd.sound;
+    if (cd.bird.soundStarts) el.dataset.soundStarts = JSON.stringify(cd.bird.soundStarts);
+  }
 
-      <h2 class="press__h reveal">
-        Research that <em>travels</em>.
-      </h2>
-      <p class="press__lede reveal">
-        My work on financial influencers, ATM conversion fees, short selling,
-        and analyst advice has been picked up by Dutch and international
-        media — from <em>Het Financieele Dagblad</em> to <em>Bloomberg</em>.
-      </p>
+  const back  = document.createElement("div");
+  back.className  = "card-face card-back";
+  back.innerHTML  = CARD_BACK_SVG;
 
-      <div class="press__grid">
-        <article class="press__card reveal">
-          <span class="press__topic">Finfluencers</span>
-          <ul>
-            <li>RTL Nieuws <small>(TV)</small></li>
-            <li>Radio 1</li>
-            <li>Het Financieele Dagblad</li>
-          </ul>
-        </article>
-        <article class="press__card reveal">
-          <span class="press__topic">ATM &amp; conversions</span>
-          <ul>
-            <li>BNN Vara Kassa <small>(TV)</small></li>
-            <li>De Telegraaf</li>
-            <li>de Volkskrant</li>
-          </ul>
-        </article>
-        <article class="press__card reveal">
-          <span class="press__topic">Short selling</span>
-          <ul>
-            <li>BNR Nieuwsradio</li>
-            <li>Les Echos</li>
-            <li>Bloomberg</li>
-          </ul>
-        </article>
-      </div>
-    </div>
-  </section>
+  const front = document.createElement("div");
+  front.className = `card-face card-front ${cd.type}-card`;
+  front.style.backgroundColor = cd.bird.color;
 
-  <!-- ===== SPEAKING ===== -->
-  <section id="speaking" class="speaking">
-    <div class="speaking__inner">
-      <div class="section-head reveal section-head--light">
-        <span class="section-head__no">06</span>
-        <span class="section-head__title">Speaking</span>
-      </div>
+  if (cd.type === "image") {
+    const img = document.createElement("img");
+    img.src       = WM_IMAGE + (cd.image || cd.bird.image);
+    img.alt       = cd.bird.name;
+    img.className = "loading";
+    img.addEventListener("load",  () => { img.className = "loaded"; });
+    img.addEventListener("error", () => { img.replaceWith(makeFallback()); });
+    front.appendChild(img);
+    front.appendChild(makeLabel(cd.bird.name));
+  } else {
+    const spk = document.createElement("div");
+    spk.className   = "speaker";
+    spk.innerHTML = SOUND_ICON_SVG;
+    front.appendChild(spk);
+    front.appendChild(makeLabel(cd.bird.name));
+  }
 
-      <h2 class="speaking__h reveal">
-        Recent talks &amp; <em>invited research</em>.
-      </h2>
+  const inner = document.createElement("div");
+  inner.className = "card-inner";
+  inner.appendChild(back);
+  inner.appendChild(front);
+  el.appendChild(inner);
 
-      <div class="speaking__grid">
-        <ul class="talks reveal">
-          <li><span class="talks__year">2026</span><span>ASR · Invited research talk</span></li>
-          <li><span class="talks__year">2024</span><span>Dutch Sustainable Finance Workshop, Amsterdam</span></li>
-          <li><span class="talks__year">2023</span><span>ARCS Conference, Washington DC</span></li>
-          <li><span class="talks__year">2022</span><span>ACES, Utrecht</span></li>
-          <li><span class="talks__year">2022</span><span>GRASFI Conference, Zurich</span></li>
-          <li><span class="talks__year">2022</span><span>Research in Behavioral Finance Conf., Amsterdam</span></li>
-          <li><span class="talks__year">2022</span><span>Environmental Finance for the Common Good, London</span></li>
-          <li><span class="talks__year">2019</span><span>VEB General Meeting · "Beleggen met experts"</span></li>
-        </ul>
+  el.addEventListener("click", () => onCardClick(el));
+  return el;
+}
 
-        <figure class="speaking__photo reveal">
-          <img src="img/speaking-3.jpg" alt="Dirk Gerritsen at the Research in Behavioral Finance Conference" />
-          <figcaption>RBFC, Amsterdam · 2022</figcaption>
-        </figure>
-      </div>
-    </div>
-  </section>
+function makeLabel(text) {
+  const d = document.createElement("div");
+  d.className   = "card-label";
+  d.textContent = text;
+  return d;
+}
 
-  <!-- ===== CONTACT ===== -->
-  <section id="contact" class="contact">
-    <div class="contact__inner">
-      <div class="section-head reveal section-head--light">
-        <span class="section-head__no">07</span>
-        <span class="section-head__title">Contact</span>
-      </div>
+function makeFallback() {
+  const d = document.createElement("div");
+  d.className   = "no-img";
+  d.textContent = "🐦";
+  return d;
+}
 
-      <h2 class="contact__h reveal">
-        Get in <em>touch</em>.
-      </h2>
+/* ============================================================
+   CARD CLICK
+   ============================================================ */
+function onCardClick(el) {
+  if (locked || paused || el.classList.contains("gone")) return;
 
-      <div class="contact__grid">
-        <div class="contact__copy reveal">
-          <p>
-            For research collaboration, PhD enquiries, media requests, or to
-            invite me to speak — the fastest route is email. I read everything,
-            even if my reply latency varies with the academic calendar.
-          </p>
-        </div>
+  // Re-click flipped sound card → replay audio
+  if (el.classList.contains("flipped") && el.dataset.type === "sound") {
+    playSound(el.dataset.sound, el, el.dataset.soundStarts ? JSON.parse(el.dataset.soundStarts) : null);
+    return;
+  }
 
-        <div class="contact__channels reveal">
-          <a class="channel" href="mailto:d.f.gerritsen@uu.nl">
-            <span class="channel__label">Email</span>
-            <span class="channel__value">d.f.gerritsen@uu.nl</span>
-          </a>
-          <a class="channel" href="tel:+31638224127">
-            <span class="channel__label">Phone</span>
-            <span class="channel__value">+31 6 3822 4127</span>
-          </a>
-          <a class="channel" href="http://www.dirkgerritsen.nl" target="_blank" rel="noopener">
-            <span class="channel__label">Personal site</span>
-            <span class="channel__value">dirkgerritsen.nl</span>
-          </a>
-          <a class="channel" href="https://linkedin.com/in/dirkgerritsen/" target="_blank" rel="noopener">
-            <span class="channel__label">LinkedIn</span>
-            <span class="channel__value">in/dirkgerritsen</span>
-          </a>
-          <a class="channel" href="https://www.linkedin.com/company/finance-utrecht" target="_blank" rel="noopener">
-            <span class="channel__label">Finance @ U.U.</span>
-            <span class="channel__value">company/finance-utrecht</span>
-          </a>
-        </div>
-      </div>
-    </div>
-  </section>
+  if (el.classList.contains("flipped") || el.classList.contains("matched")) return;
+  if (flipped.length >= 2) return;
 
-  <!-- ===== FOOTER ===== -->
-  <footer class="foot">
-    <div class="foot__inner">
-      <div class="foot__brand">
-        <img src="img/finance-logo.png" alt="Finance @ Utrecht University" />
-      </div>
-      <div class="foot__meta">
-        <p>Affiliated with <strong>Finance @ Utrecht University</strong>.</p>
-        <p class="foot__small">
-          © <span id="year"></span> Dirk Gerritsen.
-          Page set in Fraunces &amp; Inter.
-        </p>
-      </div>
-      <div class="foot__top">
-        <a href="#top" aria-label="Back to top">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
-          back to top
-        </a>
-      </div>
-    </div>
-  </footer>
+  el.classList.add("flipped");
+  if (el.dataset.type === "sound") playSound(el.dataset.sound, el, el.dataset.soundStarts ? JSON.parse(el.dataset.soundStarts) : null);
+  flipped.push(el);
 
-  <script src="js/script.js"></script>
+  if (flipped.length === 2) {
+    locked = true;
+    // 420ms flip animation + 1000ms visible = 1420ms; use 1500 for comfort
+    setTimeout(resolveFlipped, 3420); // 420ms flip-animatie + 3s kijktijd
+  }
+}
+
+function resolveFlipped() {
+  const [a, b] = flipped;
+  flipped = [];
+
+  if (a.dataset.birdId === b.dataset.birdId) {
+    // ── MATCH ──
+    players[currentIdx].score++;
+    remainingPairs--;
+    renderScores();
+    updatePairsLeft();
+
+    [a, b].forEach(el => {
+      el.classList.add("matched", "disappearing");
+      el.addEventListener("animationend", () => {
+        el.classList.add("gone");
+        el.classList.remove("disappearing");
+      }, { once: true });
+    });
+
+    locked = false;
+    if (remainingPairs === 0) setTimeout(showWin, 700);
+    else advancePlayer();
+
+  } else {
+    // ── NO MATCH ──
+    [a, b].forEach(el => {
+      el.classList.remove("flipped");
+      if (el.dataset.type === "sound")
+        el.querySelector(".card-face.sound-card")?.classList.remove("playing");
+    });
+    advancePlayer();
+    locked = false;
+  }
+}
+
+/* ============================================================
+   PLAYERS
+   ============================================================ */
+function advancePlayer() {
+  if (players.length > 1) {
+    currentIdx = (currentIdx + 1) % players.length;
+    renderScores();
+  }
+}
+
+function renderScores() {
+  const container = document.getElementById("scores");
+  container.innerHTML = "";
+  players.forEach((p, i) => {
+    const div = document.createElement("div");
+    div.className = "player-score" + (i === currentIdx ? " active" : "");
+    div.innerHTML =
+      `<span class="p-name">${p.name}</span>` +
+      `<span class="p-score">${p.score}</span>`;
+    container.appendChild(div);
+  });
+}
+
+function updatePairsLeft() {
+  document.getElementById("pairs-left").textContent =
+    remainingPairs === 1 ? "1 paar over" : `${remainingPairs} paren over`;
+}
+
+/* ============================================================
+   PAUSE
+   ============================================================ */
+function openPause() {
+  paused = true;
+  const who = players[currentIdx]?.name || "";
+  document.getElementById("pause-info").textContent =
+    players.length > 1 ? `${who} is aan de beurt` : "";
+  document.getElementById("pause-overlay").classList.remove("hidden");
+}
+
+function closePause() {
+  paused = false;
+  document.getElementById("pause-overlay").classList.add("hidden");
+}
+
+/* ============================================================
+   CURATOR STATE — ingebakken standaard + localStorage override
+   ============================================================ */
+
+const DEFAULT_CATALOGS = {
+  nl: {
+    "merel":          {enabled:true, images:["merel_1.jpg","merel_2.jpg"], sounds:[{file:"merel_1.ogg",start:0},{file:"merel_2.ogg",start:0}]},
+    "koolmees":       {enabled:true, images:["koolmees_1.jpg","koolmees_2.jpg","koolmees_3.jpg","koolmees_4.jpg"], sounds:[{file:"koolmees_1.ogg",start:0},{file:"koolmees_2.ogg",start:0}]},
+    "roodborst":      {enabled:true, images:["roodborst_1.jpg","roodborst_2.jpg","roodborst_3.jpg","roodborst_4.jpg"], sounds:[{file:"roodborst_1.ogg",start:0},{file:"roodborst_2.ogg",start:0}]},
+    "kauw":           {enabled:true, images:["kauw_1.jpg","kauw_2.jpg"], sounds:[{file:"kauw_1.ogg",start:0}]},
+    "spreeuw":        {enabled:true, images:["spreeuw_1.jpg","spreeuw_2.jpg","spreeuw_3.jpg"], sounds:[{file:"spreeuw_1.ogg",start:0},{file:"spreeuw_2.ogg",start:0}]},
+    "huismus":        {enabled:true, images:["huismus_1.jpg","huismus_2.jpg","huismus_3.jpg"], sounds:[{file:"huismus_1.ogg",start:0},{file:"huismus_2.ogg",start:0}]},
+    "vink":           {enabled:true, images:["vink_1.jpg","vink_2.jpg","vink_3.jpg"], sounds:[{file:"vink_1.ogg",start:0},{file:"vink_2.ogg",start:0}]},
+    "houtduif":       {enabled:true, images:["houtduif_1.jpg","houtduif_2.jpg","houtduif_3.jpg","houtduif_4.jpg"], sounds:[{file:"houtduif_1.ogg",start:0},{file:"houtduif_2.ogg",start:0}]},
+    "pimpelmees":     {enabled:true, images:["pimpelmees_1.jpg","pimpelmees_2.jpg","pimpelmees_3.jpg"], sounds:[{file:"pimpelmees_1.ogg",start:0},{file:"pimpelmees_2.ogg",start:0}]},
+    "heggenmus":      {enabled:false},
+    "tjiftjaf":       {enabled:true, images:["tjiftjaf_1.jpg","tjiftjaf_2.jpg"], sounds:[{file:"tjiftjaf_1.ogg",start:0},{file:"tjiftjaf_2.ogg",start:0}]},
+    "winterkoning":   {enabled:true, images:["winterkoning_1.jpg","winterkoning_2.jpg","winterkoning_3.jpg"], sounds:[{file:"winterkoning_1.ogg",start:0},{file:"winterkoning_2.ogg",start:0}]},
+    "zanglijster":    {enabled:false},
+    "groenling":      {enabled:true, images:["groenling_1.jpg","groenling_2.jpg","groenling_3.jpg"], sounds:[{file:"groenling_1.ogg",start:0}]},
+    "kievit":         {enabled:true, images:["kievit_1.jpg","kievit_2.jpg"], sounds:[{file:"kievit_1.ogg",start:0},{file:"kievit_2.ogg",start:0}]},
+    "ekster":         {enabled:true, images:["ekster_1.jpg","ekster_2.jpg"], sounds:[{file:"ekster_1.ogg",start:0},{file:"ekster_2.ogg",start:0}]},
+    "kraai":          {enabled:true, images:["kraai_1.jpg","kraai_2.jpg","kraai_3.jpg"], sounds:[{file:"kraai_1.ogg",start:0},{file:"kraai_2.ogg",start:0},{file:"kraai_3.ogg",start:0}]},
+    "gaai":           {enabled:true, images:["gaai_1.jpg","gaai_2.jpg","gaai_3.jpg"], sounds:[{file:"gaai_1.ogg",start:0}]},
+    "wilde-eend":     {enabled:true, images:["wilde-eend_1.jpg","wilde-eend_2.jpg","wilde-eend_3.jpg","wilde-eend_4.jpg"], sounds:[{file:"wilde-eend_1.ogg",start:0}]},
+    "meerkoet":       {enabled:false},
+    "boerenzwaluw":   {enabled:true, images:["boerenzwaluw_1.jpg","boerenzwaluw_2.jpg"], sounds:[{file:"boerenzwaluw_1.ogg",start:0}]},
+    "gierzwaluw":     {enabled:true, images:["gierzwaluw_1.jpg","gierzwaluw_2.jpg"], sounds:[{file:"gierzwaluw_1.ogg",start:0}]},
+    "koekoek":        {enabled:true, images:["koekoek_1.jpg","koekoek_2.jpg"], sounds:[{file:"koekoek_1.ogg",start:0}]},
+    "nachtegaal":     {enabled:true, images:["nachtegaal_1.jpg","nachtegaal_2.jpg","nachtegaal_3.jpg"], sounds:[{file:"nachtegaal_1.ogg",start:0},{file:"nachtegaal_2.ogg",start:0}]},
+    "gr-bonte-specht":{enabled:true, images:["gr-bonte-specht_1.jpg","gr-bonte-specht_2.jpg"], sounds:[{file:"gr-bonte-specht_1.ogg",start:0},{file:"gr-bonte-specht_2.ogg",start:0}]},
+  }
+};
+
+function loadCuratorState() {
+  const key = selectedCountry.catalogKey
+    ? `vogelMemoryCatalog_${selectedCountry.catalogKey}`
+    : "vogelMemoryCatalog_nl";
+  try {
+    const stored = JSON.parse(localStorage.getItem(key));
+    return stored || DEFAULT_CATALOGS[selectedCountry.catalogKey] || null;
+  } catch {
+    return DEFAULT_CATALOGS[selectedCountry.catalogKey] || null;
+  }
+}
+
+/* ============================================================
+   AUDIO — Web Audio API
+   • Fade-in  : 0.1 s via GainNode ramp
+   • Normalisatie : RMS-analyse van het afspeelgedeelte
+   • Fade-out : 1 s na 3 s via GainNode ramp
+   ============================================================ */
+
+const AUDIO_STARTS = {};
+
+const TARGET_RMS  = 0.12;  // streefniveau (0–1)
+const MAX_GAIN    = 10;    // maximale versterking
+const FADE_IN_S   = 0.1;  // fade-in duur (seconden)
+const FADE_OUT_S  = 1.0;  // fade-out duur
+const PLAY_S      = 3.0;  // speelduur vóór fade-out
+
+function rmsGain(buffer, startAt) {
+  const sr    = buffer.sampleRate;
+  const start = Math.floor(startAt * sr);
+  const end   = Math.min(start + Math.floor((PLAY_S + FADE_OUT_S) * sr), buffer.length);
+  let sumSq = 0, n = 0;
+  for (let ch = 0; ch < buffer.numberOfChannels; ch++) {
+    const data = buffer.getChannelData(ch);
+    for (let i = start; i < end; i++) { sumSq += data[i] ** 2; n++; }
+  }
+  const rms = n > 0 ? Math.sqrt(sumSq / n) : 0;
+  return rms > 0 ? Math.min(TARGET_RMS / rms, MAX_GAIN) : 1;
+}
+
+async function playSound(filename, cardEl, birdSoundStarts) {
+  stopAudio();
+
+  const front = cardEl?.querySelector(".card-face.sound-card");
+  if (front) { front.classList.add("playing"); activeFront = front; }
+
+  const startAt = (birdSoundStarts?.[filename] != null)
+    ? birdSoundStarts[filename]
+    : (AUDIO_STARTS[filename] || 0);
+
+  const url = WM_AUDIO + filename;
+  const ctx = getAudioCtx();
+  await ctx.resume();
+
+  try {
+    // Laad & cache gedecodeerde buffer
+    if (!audioCache[url]) {
+      const resp = await fetch(url, { mode: "cors" });
+      const ab   = await resp.arrayBuffer();
+      audioCache[url] = await ctx.decodeAudioData(ab);
+    }
+    const buffer = audioCache[url];
+    const gain   = rmsGain(buffer, startAt);
+
+    const source   = ctx.createBufferSource();
+    source.buffer  = buffer;
+
+    const fadeNode = ctx.createGain();
+    fadeNode.gain.setValueAtTime(0, ctx.currentTime);
+    fadeNode.gain.linearRampToValueAtTime(gain, ctx.currentTime + FADE_IN_S);
+    source.connect(fadeNode);
+    fadeNode.connect(ctx.destination);
+    source.start(0, startAt);
+
+    activeSource   = source;
+    activeFadeGain = fadeNode;
+
+    // Fade-out na PLAY_S seconden
+    fadeTimerId = setTimeout(() => {
+      const now = ctx.currentTime;
+      fadeNode.gain.cancelScheduledValues(now);
+      fadeNode.gain.setValueAtTime(fadeNode.gain.value, now);
+      fadeNode.gain.linearRampToValueAtTime(0, now + FADE_OUT_S);
+      setTimeout(() => {
+        try { source.stop(); } catch (_) {}
+        if (front) { front.classList.remove("playing"); activeFront = null; }
+      }, (FADE_OUT_S + 0.1) * 1000);
+    }, PLAY_S * 1000);
+
+  } catch (err) {
+    // Fallback: plain Audio als CORS of decode mislukt
+    console.warn("Web Audio fallback:", err.message);
+    const audio = new Audio(url);
+    audio.volume = 0;
+    if (startAt > 0) audio.addEventListener("canplay",
+      () => { audio.currentTime = startAt; }, { once: true });
+    audio.play().catch(() => {});
+    // Fade-in
+    let s = 0;
+    const fi = setInterval(() => { audio.volume = Math.min(1, ++s / 10); if (s >= 10) clearInterval(fi); }, 10);
+    audio.addEventListener("play", () => {
+      fadeTimerId = setTimeout(() => {
+        let step = 0, vol = audio.volume;
+        const fo = setInterval(() => {
+          audio.volume = Math.max(0, vol * (1 - ++step / 30));
+          if (step >= 30) { clearInterval(fo); audio.pause(); front?.classList.remove("playing"); activeFront = null; }
+        }, 33);
+      }, PLAY_S * 1000);
+    }, { once: true });
+    activeAudio = audio;
+  }
+}
+
+function stopAudio() {
+  if (fadeTimerId) { clearTimeout(fadeTimerId); fadeTimerId = null; }
+  if (activeSource) {
+    try {
+      activeFadeGain?.gain.cancelScheduledValues(audioCtx?.currentTime ?? 0);
+      activeFadeGain?.gain.setValueAtTime(0, audioCtx?.currentTime ?? 0);
+      activeSource.stop();
+    } catch (_) {}
+    activeSource = null; activeFadeGain = null;
+  }
+  if (activeAudio) { activeAudio.pause(); activeAudio = null; }
+  if (activeFront) { activeFront.classList.remove("playing"); activeFront = null; }
+}
+
+/* ============================================================
+   WIN SCREEN
+   ============================================================ */
+function showWin() {
+  stopAudio();
+  const sorted   = [...players].sort((a, b) => b.score - a.score);
+  const maxScore = sorted[0].score;
+  const tbody    = document.getElementById("result-body");
+  tbody.innerHTML = "";
+  sorted.forEach((p, i) => {
+    const tr = document.createElement("tr");
+    if (i === 0 && players.length > 1) tr.className = "winner";
+    tr.innerHTML =
+      `<td>${i === 0 && players.length > 1 ? "🏆 " : ""}${p.name}</td>` +
+      `<td>${p.score}</td>`;
+    tbody.appendChild(tr);
+  });
+  showScreen("win-screen");
+}
+
+/* ============================================================
+   NAVIGATION
+   ============================================================ */
+function showScreen(id) {
+  ["setup-screen", "game-screen", "win-screen"].forEach(s =>
+    document.getElementById(s).classList.toggle("hidden", s !== id)
+  );
+}
+
+function goToSetup() {
+  stopAudio();
+  closePause();
+  showScreen("setup-screen");
+}
+
+/* ============================================================
+   UTILS
+   ============================================================ */
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/* ── boot ── */
+initSetup();
+</script>
 </body>
 </html>
