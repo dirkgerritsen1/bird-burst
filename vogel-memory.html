@@ -403,7 +403,45 @@
 <!-- ══ SETUP SCREEN ══════════════════════════════════════════ -->
 <div id="setup-screen" class="screen">
   <div class="setup-box">
-    <h1 class="setup-title">🐦 Vogelverkenner</h1>
+    <h1 class="setup-title">
+      <svg viewBox="0 0 60 72" width="48" height="58" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;margin-right:6px">
+        <defs>
+          <filter id="logo-enc" x="-5%" y="-5%" width="110%" height="110%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.55" numOctaves="3" seed="5" result="n"/>
+            <feDisplacementMap in="SourceGraphic" in2="n" scale="1.2" xChannelSelector="R" yChannelSelector="G"/>
+          </filter>
+        </defs>
+        <g filter="url(#logo-enc)" transform="translate(30,36)">
+          <!-- staart -->
+          <path d="M-4,28 Q-8,44 -6,54" stroke="#7a6040" stroke-width="2.5" fill="none" stroke-linecap="round" opacity=".7"/>
+          <path d="M0,28 Q0,44 2,54" stroke="#8a7050" stroke-width="1.5" fill="none" stroke-linecap="round" opacity=".5"/>
+          <path d="M4,28 Q8,42 8,52" stroke="#9a8060" stroke-width="1.2" fill="none" stroke-linecap="round" opacity=".4"/>
+          <!-- vleugel -->
+          <path d="M-16,-4 Q-28,8 -24,26 Q-14,20 -2,16 Q6,12 4,-2 Z" fill="#8a7050" fill-opacity=".5" stroke="#6a5030" stroke-width="1.2"/>
+          <line x1="-24" y1="22" x2="-10" y2="8" stroke="#9a8060" stroke-width="1" opacity=".45"/>
+          <line x1="-18" y1="24" x2="-4" y2="10" stroke="#9a8060" stroke-width=".9" opacity=".4"/>
+          <!-- lichaam -->
+          <ellipse cx="2" cy="16" rx="16" ry="18" fill="#c8a878" fill-opacity=".55" stroke="#8a6840" stroke-width="1.2"/>
+          <!-- borst oranje-rood -->
+          <path d="M-6,-2 Q10,-6 14,8 Q12,22 2,26 Q-8,24 -10,14 Q-10,-2 -6,-2 Z" fill="#d4683a" fill-opacity=".65" stroke="#b04820" stroke-width="1"/>
+          <!-- kop -->
+          <circle cx="4" cy="-18" r="16" fill="#c8a878" fill-opacity=".6" stroke="#8a6840" stroke-width="1.2"/>
+          <!-- oranje masker -->
+          <path d="M-4,-32 Q14,-34 16,-20 Q14,-8 4,-6 Q-6,-6 -8,-18 Q-8,-30 -4,-32 Z" fill="#d4683a" fill-opacity=".6" stroke="#b04820" stroke-width=".9"/>
+          <!-- oog -->
+          <circle cx="8" cy="-20" r="5.5" fill="white" fill-opacity=".88" stroke="#6a4820" stroke-width="1"/>
+          <circle cx="9" cy="-19.5" r="3.5" fill="#2a1a08" fill-opacity=".92"/>
+          <circle cx="10" cy="-21" r="1.4" fill="white" fill-opacity=".95"/>
+          <!-- snavel -->
+          <path d="M14,-14 Q22,-10 22,-8 Q18,-4 14,-8 Z" fill="#8a6030" fill-opacity=".82" stroke="#6a4018" stroke-width=".9"/>
+          <!-- pootjes -->
+          <line x1="-4" y1="32" x2="-8" y2="42" stroke="#8a6840" stroke-width="2" stroke-linecap="round" opacity=".7"/>
+          <line x1="6" y1="33" x2="4" y2="42" stroke="#8a6840" stroke-width="2" stroke-linecap="round" opacity=".7"/>
+          <line x1="-8" y1="42" x2="-14" y2="48" stroke="#8a6840" stroke-width="1.5" stroke-linecap="round" opacity=".6"/>
+          <line x1="-8" y1="42" x2="-2" y2="48" stroke="#8a6840" stroke-width="1.5" stroke-linecap="round" opacity=".6"/>
+          <line x1="4" y1="42" x2="-2" y2="48" stroke="#8a6840" stroke-width="1.5" stroke-linecap="round" opacity=".6"/>
+        </g>
+      </svg>Vogelverkenner</h1>
     <p class="setup-subtitle">Welke vogel zingt zijn lied?</p>
 
     <p class="section-label">Kies een land</p>
