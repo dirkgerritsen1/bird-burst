@@ -404,7 +404,7 @@
 <div id="setup-screen" class="screen">
   <div class="setup-box">
     <h1 class="setup-title">
-      <svg viewBox="0 0 60 72" width="48" height="58" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;margin-right:6px">
+      <svg viewBox="0 0 60 72" width="48" height="58" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;margin-right:6px" class="logo-bird">
         <defs>
           <filter id="logo-enc" x="-5%" y="-5%" width="110%" height="110%">
             <feTurbulence type="fractalNoise" baseFrequency="0.55" numOctaves="3" seed="5" result="n"/>
@@ -444,8 +444,8 @@
       </svg>Vogelverkenner</h1>
     <p class="setup-subtitle">Welke vogel zingt zijn lied?</p>
 
-    <p class="section-label">Kies een land</p>
-    <div class="country-grid" id="country-grid"></div>
+    <!-- land-keuze tijdelijk verborgen; alleen NL actief -->
+    <div id="country-grid" style="display:none"></div>
 
     <p class="section-label">Aantal deelnemers</p>
     <div class="count-row" id="count-row"></div>
@@ -1047,9 +1047,12 @@ const CARD_BACK_SVG = `<svg viewBox="0 0 240 160" xmlns="http://www.w3.org/2000/
   <line x1="-4" y1="38" x2="-10" y2="42" stroke="#8a6840" stroke-width="1.5" stroke-linecap="round" opacity=".6"/>
 </g>
 <!-- subtiele tekst onderaan -->
-<text x="120" y="152" text-anchor="middle" font-size="8"
+<text x="120" y="147" text-anchor="middle" font-size="7"
   font-family="Georgia,serif" fill="#8a6030" fill-opacity=".4"
-  letter-spacing="3">VOGELVERKENNER</text>
+  letter-spacing="3">VOGEL</text>
+<text x="120" y="156" text-anchor="middle" font-size="7"
+  font-family="Georgia,serif" fill="#8a6030" fill-opacity=".4"
+  letter-spacing="3">VERKENNER</text>
 </svg>`;
 
 function makeCard(cd) {
