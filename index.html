@@ -132,6 +132,24 @@
     }
     .player-row input:focus { border-color: #d4683a; }
 
+    /* ── beurtwissel ── */
+    #turn-mode-block { margin-bottom: 22px; }
+    .turn-options { display: flex; flex-direction: column; gap: 7px; }
+    .turn-option {
+      display: flex; align-items: baseline; gap: 8px;
+      padding: 8px 12px; cursor: pointer;
+      border: 1.5px solid #e8c89a; border-radius: 10px;
+      background: white; transition: all .16s;
+      flex-wrap: wrap;
+    }
+    .turn-option:has(input:checked) {
+      border-color: #d4683a; background: #fef0e4;
+    }
+    .turn-option input { accent-color: #d4683a; cursor: pointer; }
+    .turn-title { font-size: 0.9em; font-weight: 600; color: #7a5c3a; }
+    .turn-option:has(input:checked) .turn-title { color: #8a3a10; }
+    .turn-desc { font-size: 0.78em; font-style: italic; color: #9a8060; }
+
     .start-btn {
       width: 100%; padding: 12px;
       background: linear-gradient(135deg, #d4683a, #a03018);
@@ -460,6 +478,22 @@
     <p class="section-label" id="names-label">Namen</p>
     <div class="player-inputs" id="player-inputs"></div>
 
+    <div id="turn-mode-block">
+      <p class="section-label">Beurtwissel</p>
+      <div class="turn-options">
+        <label class="turn-option">
+          <input type="radio" name="turn-mode" value="traditional" checked>
+          <span class="turn-title">Traditioneel</span>
+          <span class="turn-desc">nog een beurt na een goed paar</span>
+        </label>
+        <label class="turn-option">
+          <input type="radio" name="turn-mode" value="alternate">
+          <span class="turn-title">Om-en-om</span>
+          <span class="turn-desc">altijd wisselen van beurt</span>
+        </label>
+      </div>
+    </div>
+
     <button class="start-btn" onclick="startGame()">Spelen ▶</button>
   </div>
 </div>
@@ -551,6 +585,70 @@
    ============================================================ */
 const WM_AUDIO = "audio/nl/";
 const WM_IMAGE = "images/nl/";
+
+/* Focuspunt per foto: positie van de vogelkop als "x% y%".
+   Gebruikt als object-position zodat de kop centraal blijft bij bijsnijden.
+   Ontbrekende bestanden vallen terug op "50% 35%" (iets boven het midden). */
+const FOCAL_POINTS = {
+  "boerenzwaluw_1.jpg": "40% 30%",
+  "boerenzwaluw_2.jpg": "55% 35%",
+  "ekster_1.jpg":       "60% 30%",
+  "ekster_2.jpg":       "70% 45%",
+  "gaai_1.jpg":         "55% 25%",
+  "gaai_2.jpg":         "55% 20%",
+  "gaai_3.jpg":         "48% 42%",
+  "gierzwaluw_1.jpg":   "30% 30%",
+  "gierzwaluw_2.jpg":   "50% 50%",
+  "gr-bonte-specht_1.jpg": "42% 32%",
+  "gr-bonte-specht_2.jpg": "38% 32%",
+  "groenling_1.jpg":    "42% 45%",
+  "groenling_2.jpg":    "52% 28%",
+  "groenling_3.jpg":    "42% 28%",
+  "houtduif_1.jpg":     "42% 22%",
+  "houtduif_2.jpg":     "95% 28%",
+  "houtduif_3.jpg":     "58% 25%",
+  "huismus_1.jpg":      "62% 28%",
+  "huismus_2.jpg":      "18% 25%",
+  "huismus_3.jpg":      "55% 30%",
+  "kauw_1.jpg":         "30% 18%",
+  "kievit_1.jpg":       "35% 30%",
+  "kievit_2.jpg":       "38% 42%",
+  "koekoek_1.jpg":      "30% 35%",
+  "koekoek_2.jpg":      "90% 25%",
+  "koolmees_1.jpg":     "68% 25%",
+  "koolmees_2.jpg":     "72% 30%",
+  "koolmees_3.jpg":     "50% 40%",
+  "koolmees_4.jpg":     "30% 28%",
+  "kraai_2.jpg":        "28% 20%",
+  "kraai_3.jpg":        "42% 28%",
+  "merel_1.jpg":        "25% 22%",
+  "merel_2.jpg":        "35% 22%",
+  "nachtegaal_1.jpg":   "40% 20%",
+  "nachtegaal_2.jpg":   "45% 30%",
+  "nachtegaal_3.jpg":   "50% 30%",
+  "pimpelmees_1.jpg":   "70% 28%",
+  "pimpelmees_2.jpg":   "35% 20%",
+  "pimpelmees_3.jpg":   "65% 28%",
+  "roodborst_1.jpg":    "35% 30%",
+  "roodborst_2.jpg":    "30% 40%",
+  "roodborst_3.jpg":    "52% 40%",
+  "roodborst_4.jpg":    "40% 30%",
+  "spreeuw_1.jpg":      "65% 28%",
+  "spreeuw_2.jpg":      "60% 25%",
+  "spreeuw_3.jpg":      "30% 42%",
+  "tjiftjaf_1.jpg":     "35% 30%",
+  "tjiftjaf_2.jpg":     "48% 35%",
+  "vink_1.jpg":         "32% 30%",
+  "vink_2.jpg":         "62% 32%",
+  "vink_3.jpg":         "40% 25%",
+  "wilde-eend_1.jpg":   "48% 40%",
+  "wilde-eend_2.jpg":   "52% 22%",
+  "wilde-eend_3.jpg":   "70% 35%",
+  "winterkoning_1.jpg": "60% 30%",
+  "winterkoning_2.jpg": "35% 30%",
+  "winterkoning_3.jpg": "48% 42%",
+};
+
 
 // Only Netherlands has bird data for now; others are placeholders (active: false)
 const COUNTRIES = [
@@ -798,6 +896,7 @@ function initSetup() {
   buildCountryGrid();
   buildCountRow();
   renderPlayerInputs();
+  document.getElementById("turn-mode-block").style.display = numPlayers > 1 ? "" : "none";
 }
 
 function buildCountryGrid() {
@@ -842,6 +941,8 @@ function selectCount(n) {
     b.classList.toggle("active", i + 1 === n)
   );
   renderPlayerInputs();
+  // beurtwissel-keuze alleen relevant bij 2+ spelers
+  document.getElementById("turn-mode-block").style.display = n > 1 ? "" : "none";
 }
 
 function participantWord() {
@@ -882,6 +983,7 @@ let flipped        = [];
 let locked         = false;
 let remainingPairs = 0;
 let paused         = false;
+let turnMode       = "traditional"; // "traditional" | "alternate"
 
 // audio — Web Audio API
 let audioCtx     = null;   // lazy init
@@ -908,6 +1010,7 @@ function startGame() {
     name:  inp.value.trim() || `${word} ${i + 1}`,
     score: 0
   }));
+  turnMode = document.querySelector('input[name="turn-mode"]:checked')?.value || "traditional";
   launchGame();
 }
 
@@ -1109,9 +1212,11 @@ function makeCard(cd) {
   front.style.backgroundColor = cd.bird.color;
 
   if (cd.type === "image") {
+    const file = cd.image || cd.bird.image;
     const img = document.createElement("img");
-    img.src       = WM_IMAGE + (cd.image || cd.bird.image);
+    img.src       = WM_IMAGE + file;
     img.alt       = cd.bird.name;
+    img.style.objectPosition = FOCAL_POINTS[file] || "50% 35%";
     img.className = "loading";
     img.addEventListener("load",  () => { img.className = "loaded"; });
     img.addEventListener("error", () => { img.replaceWith(makeFallback()); });
@@ -1196,7 +1301,8 @@ function resolveFlipped() {
 
     locked = false;
     if (remainingPairs === 0) setTimeout(showWin, 700);
-    else advancePlayer();
+    else if (turnMode === "alternate") advancePlayer();
+    // traditioneel: zelfde speler blijft aan de beurt na een goed paar
 
   } else {
     // ── NO MATCH ──
@@ -1303,11 +1409,11 @@ const DEFAULT_CATALOGS = {
     "merel":          {enabled:true, images:["merel_1.jpg","merel_2.jpg"], sounds:[{file:"merel_1.ogg",start:0},{file:"merel_2.ogg",start:0}]},
     "koolmees":       {enabled:true, images:["koolmees_1.jpg","koolmees_2.jpg","koolmees_3.jpg","koolmees_4.jpg"], sounds:[{file:"koolmees_1.ogg",start:0},{file:"koolmees_2.ogg",start:0}]},
     "roodborst":      {enabled:true, images:["roodborst_1.jpg","roodborst_2.jpg","roodborst_3.jpg","roodborst_4.jpg"], sounds:[{file:"roodborst_1.ogg",start:0},{file:"roodborst_2.ogg",start:0}]},
-    "kauw":           {enabled:true, images:["kauw_1.jpg","kauw_2.jpg"], sounds:[{file:"kauw_1.ogg",start:0}]},
+    "kauw":           {enabled:true, images:["kauw_1.jpg"], sounds:[{file:"kauw_1.ogg",start:0}]},
     "spreeuw":        {enabled:true, images:["spreeuw_1.jpg","spreeuw_2.jpg","spreeuw_3.jpg"], sounds:[{file:"spreeuw_1.ogg",start:0},{file:"spreeuw_2.ogg",start:0}]},
     "huismus":        {enabled:true, images:["huismus_1.jpg","huismus_2.jpg","huismus_3.jpg"], sounds:[{file:"huismus_1.ogg",start:0},{file:"huismus_2.ogg",start:0}]},
     "vink":           {enabled:true, images:["vink_1.jpg","vink_2.jpg","vink_3.jpg"], sounds:[{file:"vink_1.ogg",start:0},{file:"vink_2.ogg",start:0}]},
-    "houtduif":       {enabled:true, images:["houtduif_1.jpg","houtduif_2.jpg","houtduif_3.jpg","houtduif_4.jpg"], sounds:[{file:"houtduif_1.ogg",start:0},{file:"houtduif_2.ogg",start:0}]},
+    "houtduif":       {enabled:true, images:["houtduif_1.jpg","houtduif_2.jpg","houtduif_3.jpg"], sounds:[{file:"houtduif_1.ogg",start:0},{file:"houtduif_2.ogg",start:0}]},
     "pimpelmees":     {enabled:true, images:["pimpelmees_1.jpg","pimpelmees_2.jpg","pimpelmees_3.jpg"], sounds:[{file:"pimpelmees_1.ogg",start:0},{file:"pimpelmees_2.ogg",start:0}]},
     "heggenmus":      {enabled:false},
     "tjiftjaf":       {enabled:true, images:["tjiftjaf_1.jpg","tjiftjaf_2.jpg"], sounds:[{file:"tjiftjaf_1.ogg",start:0},{file:"tjiftjaf_2.ogg",start:0}]},
@@ -1316,9 +1422,9 @@ const DEFAULT_CATALOGS = {
     "groenling":      {enabled:true, images:["groenling_1.jpg","groenling_2.jpg","groenling_3.jpg"], sounds:[{file:"groenling_1.ogg",start:0}]},
     "kievit":         {enabled:true, images:["kievit_1.jpg","kievit_2.jpg"], sounds:[{file:"kievit_1.ogg",start:0},{file:"kievit_2.ogg",start:0}]},
     "ekster":         {enabled:true, images:["ekster_1.jpg","ekster_2.jpg"], sounds:[{file:"ekster_1.ogg",start:0},{file:"ekster_2.ogg",start:0}]},
-    "kraai":          {enabled:true, images:["kraai_1.jpg","kraai_2.jpg","kraai_3.jpg"], sounds:[{file:"kraai_1.ogg",start:0},{file:"kraai_2.ogg",start:0},{file:"kraai_3.ogg",start:0}]},
+    "kraai":          {enabled:true, images:["kraai_2.jpg","kraai_3.jpg"], sounds:[{file:"kraai_1.ogg",start:0},{file:"kraai_2.ogg",start:0},{file:"kraai_3.ogg",start:0}]},
     "gaai":           {enabled:true, images:["gaai_1.jpg","gaai_2.jpg","gaai_3.jpg"], sounds:[{file:"gaai_1.ogg",start:0}]},
-    "wilde-eend":     {enabled:true, images:["wilde-eend_1.jpg","wilde-eend_2.jpg","wilde-eend_3.jpg","wilde-eend_4.jpg"], sounds:[{file:"wilde-eend_1.ogg",start:0}]},
+    "wilde-eend":     {enabled:true, images:["wilde-eend_1.jpg","wilde-eend_2.jpg","wilde-eend_3.jpg"], sounds:[{file:"wilde-eend_1.ogg",start:0}]},
     "meerkoet":       {enabled:false},
     "boerenzwaluw":   {enabled:true, images:["boerenzwaluw_1.jpg","boerenzwaluw_2.jpg"], sounds:[{file:"boerenzwaluw_1.ogg",start:0}]},
     "gierzwaluw":     {enabled:true, images:["gierzwaluw_1.jpg","gierzwaluw_2.jpg"], sounds:[{file:"gierzwaluw_1.ogg",start:0}]},
@@ -1329,9 +1435,10 @@ const DEFAULT_CATALOGS = {
 };
 
 function loadCuratorState() {
+  // _v2: sinds overstap op lokale bestanden (ogg); oude opgeslagen catalogi negeren
   const key = selectedCountry.catalogKey
-    ? `vogelMemoryCatalog_${selectedCountry.catalogKey}`
-    : "vogelMemoryCatalog_nl";
+    ? `vogelMemoryCatalog_v2_${selectedCountry.catalogKey}`
+    : "vogelMemoryCatalog_v2_nl";
   try {
     const stored = JSON.parse(localStorage.getItem(key));
     return stored || DEFAULT_CATALOGS[selectedCountry.catalogKey] || null;
